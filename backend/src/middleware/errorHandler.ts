@@ -1,5 +1,6 @@
 import type { ErrorRequestHandler } from "express";
 import { Prisma } from "@prisma/client";
+import { ZodError } from "zod";
 import { AppError } from "../utils/AppError.js";
 
 export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
@@ -8,6 +9,14 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
       success: false,
       message: error.message,
       details: error.details,
+    });
+  }
+
+  if (error instanceof ZodError) {
+    return res.status(400).json({
+      success: false,
+      message: "Validation failed",
+      details: error.flatten(),
     });
   }
 
