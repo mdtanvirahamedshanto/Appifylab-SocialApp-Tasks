@@ -28,8 +28,9 @@ Full-stack social feed application built from the provided login, registration, 
 3. Configure Cloudinary credentials in `backend/.env`.
 4. Install dependencies in both packages if needed.
 5. Generate Prisma client and run migrations from `backend/`.
-6. Start the backend on port `4000`.
-7. Start the frontend on port `3000`.
+6. Seed demo data with `pnpm db:seed` from `backend/` if you want sample content.
+7. Start the backend on port `4000`.
+8. Start the frontend on port `3000`.
 
 ### Backend Commands
 
@@ -37,6 +38,7 @@ Full-stack social feed application built from the provided login, registration, 
 - `pnpm build` - compile TypeScript
 - `pnpm prisma:generate` - generate Prisma client
 - `pnpm prisma:migrate` - create/apply migrations
+- `pnpm db:seed` - load demo users and sample feed content
 
 ### Frontend Commands
 
