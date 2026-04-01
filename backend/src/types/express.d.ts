@@ -11,6 +11,7 @@ declare global {
       };
       sessionId?: string;
       prismaUser?: User;
+      file?: Express.Multer.File;
     }
   }
 }

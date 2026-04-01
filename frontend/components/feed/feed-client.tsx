@@ -43,6 +43,7 @@ export function FeedClient() {
   const queryClient = useQueryClient();
   const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [selectedImageFile, setSelectedImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (!auth.isLoading && !auth.user) {
@@ -65,12 +66,31 @@ export function FeedClient() {
 
   const createPostMutation = useMutation({
     mutationFn: async (payload: CreatePostValues) => {
-      const { data } = await apiClient.post<{ post: ApiPost }>("/feed/posts", payload);
+      let imageUrl = payload.imageUrl ?? null;
+
+      if (selectedImageFile) {
+        const formData = new FormData();
+        formData.append("file", selectedImageFile);
+
+        const uploadResponse = await apiClient.post<{ imageUrl: string }>("/uploads/image", formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+
+        imageUrl = uploadResponse.data.imageUrl;
+      }
+
+      const { data } = await apiClient.post<{ post: ApiPost }>("/feed/posts", {
+        content: payload.content,
+        imageUrl,
+        visibility: payload.visibility,
+      });
+
       return data.post;
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: ["feed"] });
       createPostForm.reset({ content: "", imageUrl: "", visibility: "PUBLIC" });
+      setSelectedImageFile(null);
     },
   });
 
@@ -165,6 +185,23 @@ export function FeedClient() {
               >
                 {createPostMutation.isPending ? "Posting..." : "Post"}
               </button>
+            </div>
+            <div className="grid gap-3 md:grid-cols-[1fr,auto]">
+              <input
+                type="file"
+                accept="image/*"
+                className="w-full rounded-full border border-dashed border-slate-300 bg-white px-4 py-3 text-sm text-slate-600 file:mr-4 file:rounded-full file:border-0 file:bg-slate-950 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white"
+                onChange={(event) => setSelectedImageFile(event.target.files?.[0] ?? null)}
+              />
+              {selectedImageFile ? (
+                <button
+                  type="button"
+                  onClick={() => setSelectedImageFile(null)}
+                  className="rounded-full bg-slate-100 px-4 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-200"
+                >
+                  Clear image
+                </button>
+              ) : null}
             </div>
           </form>
         </section>
