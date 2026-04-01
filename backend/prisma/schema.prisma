@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum PostVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+enum LikeType {
+  POST
+  COMMENT
+  REPLY
+}
+
+model User {
+  id           String     @id @default(cuid())
+  firstName    String
+  lastName     String
+  email        String     @unique
+  passwordHash String
+  sessions     Session[]
+  posts        Post[]
+  comments     Comment[]
+  replies      Reply[]
+  likes        Like[]
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([email])
+}
+
+model Session {
+  id               String   @id @default(cuid())
+  userId           String
+  refreshTokenHash String
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([revokedAt])
+}
+
+model Post {
+  id           String         @id @default(cuid())
+  authorId     String
+  content      String         @db.Text
+  imageUrl     String?
+  visibility   PostVisibility @default(PUBLIC)
+  likeCount    Int            @default(0)
+  commentCount Int            @default(0)
+  author       User           @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  comments     Comment[]
+  likes        Like[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+
+  @@index([authorId, createdAt])
+  @@index([visibility, createdAt])
+  @@unique([createdAt, id])
+}
+
+model Comment {
+  id         String   @id @default(cuid())
+  postId     String
+  authorId   String
+  content    String   @db.Text
+  likeCount  Int      @default(0)
+  replyCount Int      @default(0)
+  post       Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author     User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  replies    Reply[]
+  likes      Like[]
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([postId, createdAt])
+  @@index([authorId, createdAt])
+  @@unique([createdAt, id])
+}
+
+model Reply {
+  id        String   @id @default(cuid())
+  commentId String
+  authorId  String
+  content   String   @db.Text
+  likeCount Int      @default(0)
+  comment   Comment  @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  author    User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  likes     Like[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([commentId, createdAt])
+  @@index([authorId, createdAt])
+  @@unique([createdAt, id])
+}
+
+model Like {
+  id          String   @id @default(cuid())
+  userId      String
+  type        LikeType
+  postId      String?
+  commentId   String?
+  replyId     String?
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post        Post?    @relation(fields: [postId], references: [id], onDelete: Cascade)
+  comment     Comment? @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reply       Reply?   @relation(fields: [replyId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId, type])
+  @@index([postId])
+  @@index([commentId])
+  @@index([replyId])
+  @@unique([userId, postId])
+  @@unique([userId, commentId])
+  @@unique([userId, replyId])
+}
