@@ -199,7 +199,7 @@ export default function HeaderNav({
                 </div>
                 <div className="_nav_profile_dropdown_info_txt">
                   <h4 className="_nav_dropdown_title">{displayName}</h4>
-                  <a href="#0" className="_nav_drop_profile">
+                  <a href="profile.html" className="_nav_drop_profile">
                     View Profile
                   </a>
                 </div>
@@ -215,6 +215,24 @@ export default function HeaderNav({
                         </svg>
                       </span>
                       Settings
+                    </div>
+                    <button type="button" className="_nav_drop_btn_link">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">
+                        <path fill="#112032" d="M5 5l.354.354L5.707 5l-.353-.354L5 5zM1.354 9.354l4-4-.708-.708-4 4 .708.708zm4-4.708l-4-4-.708.708 4 4 .708-.708z" opacity=".5" />
+                      </svg>
+                    </button>
+                  </a>
+                </li>
+                <li className="_nav_dropdown_list_item">
+                  <a href="#0" className="_nav_dropdown_link">
+                    <div className="_nav_drop_info">
+                      <span>
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20">
+                          <path stroke="#377DFF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M10 19a9 9 0 100-18 9 9 0 000 18z" />
+                          <path stroke="#377DFF" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7.38 7.3a2.7 2.7 0 015.248.9c0 1.8-2.7 2.7-2.7 2.7M10 14.5h.009" />
+                        </svg>
+                      </span>
+                      Help & Support
                     </div>
                     <button type="button" className="_nav_drop_btn_link">
                       <svg xmlns="http://www.w3.org/2000/svg" width="6" height="10" fill="none" viewBox="0 0 6 10">

@@ -48,8 +48,8 @@ export default function RightSidebar() {
           <div className="_feed_top_fixed">
             <div className="_feed_right_inner_area_card_content _mar_b24">
               <h4 className="_feed_right_inner_area_card_content_title _title5">Your Friends</h4>
-              <span className="_right_inner_area_info_content_txt">
-                <a className="_right_inner_area_info_content_txt_link" href="#0">
+              <span className="_feed_right_inner_area_card_content_txt">
+                <a className="_feed_right_inner_area_card_content_txt_link" href="find-friends.html">
                   See All
                 </a>
               </span>
@@ -78,7 +78,13 @@ export default function RightSidebar() {
                     </div>
                   </div>
                   <div className="_feed_right_inner_area_card_ppl_side">
-                    {inactive ? <span>{time ?? "5 minute ago"}</span> : <span className="_online_dot" />}
+                    {inactive ? (
+                      <span>{time ?? "5 minute ago"}</span>
+                    ) : (
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none" viewBox="0 0 14 14">
+                        <rect width="12" height="12" x="1" y="1" fill="#0ACF83" stroke="#fff" strokeWidth="2" rx="6" />
+                      </svg>
+                    )}
                   </div>
                 </div>
               );
