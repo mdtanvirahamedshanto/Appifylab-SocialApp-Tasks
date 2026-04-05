@@ -12,6 +12,9 @@ const poppins = Poppins({
 export const metadata: Metadata = {
   title: "Buddy Script",
   description: "Social feed application for the Appifylab selection task.",
+  icons: {
+    icon: "/buddy-script/assets/images/logo-copy.svg",
+  },
 };
 
 export default function RootLayout({
@@ -29,7 +32,7 @@ export default function RootLayout({
         <link rel="stylesheet" href="/buddy-script/assets/css/main.css" />
         <link rel="stylesheet" href="/buddy-script/assets/css/responsive.css" />
       </head>
-      <body className="min-h-full bg-[#f6f7fb] text-slate-900">
+      <body suppressHydrationWarning className="min-h-full bg-[#f6f7fb] text-slate-900">
         <Providers>{children}</Providers>
       </body>
     </html>

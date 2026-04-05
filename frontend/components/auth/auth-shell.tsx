@@ -3,10 +3,11 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import { AxiosError } from "axios";
 import { useAuth } from "../providers";
 
 const loginSchema = z.object({
@@ -37,6 +38,7 @@ interface AuthShellProps {
 export function AuthShell({ mode }: AuthShellProps) {
   const router = useRouter();
   const auth = useAuth();
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!auth.isLoading && auth.user) {
@@ -55,18 +57,38 @@ export function AuthShell({ mode }: AuthShellProps) {
   });
 
   const handleLogin = loginForm.handleSubmit(async (values) => {
-    await auth.login(values);
-    router.replace("/feed");
+    setSubmitError(null);
+
+    try {
+      await auth.login(values);
+      router.replace("/feed");
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 401) {
+        setSubmitError("Invalid email or password.");
+      } else {
+        setSubmitError("Unable to login right now. Please try again.");
+      }
+    }
   });
 
   const handleRegister = registerForm.handleSubmit(async (values) => {
-    await auth.register({
-      firstName: values.firstName,
-      lastName: values.lastName,
-      email: values.email,
-      password: values.password,
-    });
-    router.replace("/feed");
+    setSubmitError(null);
+
+    try {
+      await auth.register({
+        firstName: values.firstName,
+        lastName: values.lastName,
+        email: values.email,
+        password: values.password,
+      });
+      router.replace("/feed");
+    } catch (error) {
+      if (error instanceof AxiosError && error.response?.status === 409) {
+        setSubmitError("An account with this email already exists.");
+      } else {
+        setSubmitError("Unable to create account right now. Please try again.");
+      }
+    }
   });
 
   const isLogin = mode === "login";
@@ -129,6 +151,8 @@ export function AuthShell({ mode }: AuthShellProps) {
                 <div className={isLogin ? "_social_login_content_bottom_txt _mar_b40" : "_social_registration_content_bottom_txt _mar_b40"}>
                   <span>Or</span>
                 </div>
+
+                {submitError ? <p className="_mar_b20 text-sm text-rose-500">{submitError}</p> : null}
 
                 {isLogin ? (
                   <form className="_social_login_form" onSubmit={handleLogin}>
