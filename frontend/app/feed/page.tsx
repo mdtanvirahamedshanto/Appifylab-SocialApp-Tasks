@@ -1,13 +1,6 @@
 import FeedClient from "../../components/feed/FeedClient";
-import Script from "next/script";
-
+import { createElement } from "react";
 
 export default function FeedPage() {
-  return (
-    <>
-      <FeedClient />
-      <Script src="/buddy-script/assets/js/bootstrap.bundle.min.js" strategy="afterInteractive" />
-      <Script src="/buddy-script/assets/js/custom.js" strategy="afterInteractive" />
-    </>
-  );
+  return createElement(FeedClient);
 }

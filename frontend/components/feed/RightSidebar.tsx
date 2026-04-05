@@ -1,8 +1,4 @@
-const people = [
-  { name: "Steve Jobs", role: "CEO of Apple", image: "people1.png" },
-  { name: "Ryan Roslansky", role: "CEO of Linkedin", image: "people2.png" },
-  { name: "Dylan Field", role: "CEO of Figma", image: "people3.png" },
-];
+import { feedPeople } from "./feed-data";
 
 export default function RightSidebar() {
   return (
@@ -53,7 +49,7 @@ export default function RightSidebar() {
 
           <div className="_feed_bottom_fixed">
             {Array.from({ length: 8 }).map((_, idx) => {
-              const person = people[idx % people.length];
+              const person = feedPeople[idx % feedPeople.length];
               const inactive = idx % 3 === 0;
               return (
                 <div className={`_feed_right_inner_area_card_ppl ${inactive ? "_feed_right_inner_area_card_ppl_inactive" : ""}`} key={idx}>

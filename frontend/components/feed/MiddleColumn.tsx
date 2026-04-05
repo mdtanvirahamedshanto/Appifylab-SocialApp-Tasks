@@ -1,3 +1,5 @@
+import { composerActions, storyCardIndexes, timelineMenuItems } from "./feed-data";
+
 type MiddleColumnProps = {
   showTimelineMenu: boolean;
   onToggleTimeline: () => void;
@@ -12,7 +14,7 @@ function StorySection() {
         </button>
       </div>
       <div className="row">
-        {[1, 2, 3, 4].map((idx) => (
+        {storyCardIndexes.map((idx) => (
           <div className="col-xl-3 col-lg-3 col-md-4 col-sm-4 col" key={idx}>
             <div className={idx === 1 ? "_feed_inner_profile_story _b_radious6" : "_feed_inner_public_story _b_radious6"}>
               <div className={idx === 1 ? "_feed_inner_profile_story_image" : "_feed_inner_public_story_image"}>
@@ -42,7 +44,7 @@ function ComposerSection() {
       </div>
       <div className="_feed_inner_text_area_bottom">
         <div className="_feed_inner_text_area_item">
-          {["Photo", "Video", "Event", "Article"].map((item) => (
+          {composerActions.map((item) => (
             <div className="_feed_common" key={item}>
               <button type="button" className="_feed_inner_text_area_bottom_photo_link">
                 {item}
@@ -82,9 +84,13 @@ function PostCard({ showTimelineMenu, onToggleTimeline }: MiddleColumnProps) {
             </button>
             <div id="_timeline_drop" className={`_feed_timeline_dropdown _timeline_dropdown ${showTimelineMenu ? "show" : ""}`}>
               <ul className="_feed_timeline_dropdown_list">
-                <li className="_feed_timeline_dropdown_item"><a href="#0" className="_feed_timeline_dropdown_link">Save Post</a></li>
-                <li className="_feed_timeline_dropdown_item"><a href="#0" className="_feed_timeline_dropdown_link">Turn On Notification</a></li>
-                <li className="_feed_timeline_dropdown_item"><a href="#0" className="_feed_timeline_dropdown_link">Hide</a></li>
+                {timelineMenuItems.map((item) => (
+                  <li className="_feed_timeline_dropdown_item" key={item}>
+                    <a href="#0" className="_feed_timeline_dropdown_link">
+                      {item}
+                    </a>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 import HeaderNav from "./HeaderNav";
@@ -18,21 +18,9 @@ export default function FeedClient() {
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showTimelineMenu, setShowTimelineMenu] = useState(false);
 
-  useEffect(() => {
-    if (!auth.isLoading && !auth.user) {
-      router.replace("/login");
-    }
-  }, [auth.isLoading, auth.user, router]);
-
-  if (auth.isLoading) {
-    return <div className="flex min-h-screen items-center justify-center text-slate-600">Loading session...</div>;
-  }
-
-  if (!auth.user) {
-    return null;
-  }
-
-  const displayName = `${auth.user.firstName} ${auth.user.lastName}`;
+  const first = auth.user?.firstName?.trim();
+  const last = auth.user?.lastName?.trim();
+  const displayName = first && last ? `${first} ${last}` : "Dylan Field";
 
   return (
     <div className={`_layout _layout_main_wrapper ${isDarkMode ? "_dark_wrapper" : ""}`}>
@@ -54,7 +42,9 @@ export default function FeedClient() {
           onToggleNotify={() => setShowNotify((prev) => !prev)}
           onToggleProfile={() => setShowProfileMenu((prev) => !prev)}
           onLogout={async () => {
-            await auth.logout();
+            if (auth.user) {
+              await auth.logout();
+            }
             router.replace("/login");
           }}
         />

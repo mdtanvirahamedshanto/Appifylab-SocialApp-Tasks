@@ -1,10 +1,4 @@
-const people = [
-  { name: "Steve Jobs", role: "CEO of Apple", image: "people1.png" },
-  { name: "Ryan Roslansky", role: "CEO of Linkedin", image: "people2.png" },
-  { name: "Dylan Field", role: "CEO of Figma", image: "people3.png" },
-];
-
-const explore = ["Learning", "Insights", "Find friends", "Bookmarks", "Group", "Gaming", "Settings", "Save post"];
+import { exploreItems, feedPeople } from "./feed-data";
 
 export default function LeftSidebar() {
   return (
@@ -13,7 +7,7 @@ export default function LeftSidebar() {
         <div className="_left_inner_area_explore _padd_t24 _padd_b6 _padd_r24 _padd_l24 _b_radious6 _feed_inner_area">
           <h4 className="_left_inner_area_explore_title _title5 _mar_b24">Explore</h4>
           <ul className="_left_inner_area_explore_list">
-            {explore.map((item) => (
+            {exploreItems.map((item) => (
               <li className="_left_inner_area_explore_item" key={item}>
                 <a href="#0" className="_left_inner_area_explore_link">
                   {item}
@@ -34,7 +28,7 @@ export default function LeftSidebar() {
               </a>
             </span>
           </div>
-          {people.map((person) => (
+          {feedPeople.map((person) => (
             <div className="_left_inner_area_suggest_info" key={person.name}>
               <div className="_left_inner_area_suggest_info_box">
                 <div className="_left_inner_area_suggest_info_image">

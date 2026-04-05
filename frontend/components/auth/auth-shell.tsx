@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -17,15 +16,13 @@ const loginSchema = z.object({
 
 const registerSchema = z
   .object({
-    firstName: z.string().trim().min(1, "First name is required"),
-    lastName: z.string().trim().min(1, "Last name is required"),
     email: z.string().trim().email(),
-    password: z.string().min(8, "Password must be at least 8 characters"),
-    confirmPassword: z.string().min(1, "Confirm your password"),
+    password: z.string().min(1, "Password is required"),
+    repeatPassword: z.string().min(1, "Repeat password is required"),
   })
-  .refine((value) => value.password === value.confirmPassword, {
+  .refine((value) => value.password === value.repeatPassword, {
     message: "Passwords do not match",
-    path: ["confirmPassword"],
+    path: ["repeatPassword"],
   });
 
 type LoginValues = z.infer<typeof loginSchema>;
@@ -53,7 +50,7 @@ export function AuthShell({ mode }: AuthShellProps) {
 
   const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { firstName: "", lastName: "", email: "", password: "", confirmPassword: "" },
+    defaultValues: { email: "", password: "", repeatPassword: "" },
   });
 
   const handleLogin = loginForm.handleSubmit(async (values) => {
@@ -75,9 +72,10 @@ export function AuthShell({ mode }: AuthShellProps) {
     setSubmitError(null);
 
     try {
+      const emailPrefix = values.email.split("@")[0]?.trim() || "Buddy";
       await auth.register({
-        firstName: values.firstName,
-        lastName: values.lastName,
+        firstName: emailPrefix,
+        lastName: "User",
         email: values.email,
         password: values.password,
       });
@@ -96,16 +94,16 @@ export function AuthShell({ mode }: AuthShellProps) {
   return (
     <section className={isLogin ? "_social_login_wrapper _layout_main_wrapper" : "_social_registration_wrapper _layout_main_wrapper"}>
       <div className="_shape_one">
-        <Image src="/buddy-script/assets/images/shape1.svg" alt="" width={160} height={160} className="_shape_img" />
-        <Image src="/buddy-script/assets/images/dark_shape.svg" alt="" width={160} height={160} className="_dark_shape" />
+        <img src="/buddy-script/assets/images/shape1.svg" alt="" className="_shape_img" />
+        <img src="/buddy-script/assets/images/dark_shape.svg" alt="" className="_dark_shape" />
       </div>
       <div className="_shape_two">
-        <Image src="/buddy-script/assets/images/shape2.svg" alt="" width={160} height={160} className="_shape_img" />
-        <Image src="/buddy-script/assets/images/dark_shape1.svg" alt="" width={160} height={160} className="_dark_shape _dark_shape_opacity" />
+        <img src="/buddy-script/assets/images/shape2.svg" alt="" className="_shape_img" />
+        <img src="/buddy-script/assets/images/dark_shape1.svg" alt="" className="_dark_shape _dark_shape_opacity" />
       </div>
       <div className="_shape_three">
-        <Image src="/buddy-script/assets/images/shape3.svg" alt="" width={160} height={160} className="_shape_img" />
-        <Image src="/buddy-script/assets/images/dark_shape2.svg" alt="" width={160} height={160} className="_dark_shape _dark_shape_opacity" />
+        <img src="/buddy-script/assets/images/shape3.svg" alt="" className="_shape_img" />
+        <img src="/buddy-script/assets/images/dark_shape2.svg" alt="" className="_dark_shape _dark_shape_opacity" />
       </div>
 
       <div className={isLogin ? "_social_login_wrap" : "_social_registration_wrap"}>
@@ -114,18 +112,15 @@ export function AuthShell({ mode }: AuthShellProps) {
             <div className="col-xl-8 col-lg-8 col-md-12 col-sm-12">
               <div className={isLogin ? "_social_login_left" : "_social_registration_right"}>
                 <div className={isLogin ? "_social_login_left_image" : "_social_registration_right_image"}>
-                  <Image
+                  <img
                     src={isLogin ? "/buddy-script/assets/images/login.png" : "/buddy-script/assets/images/registration.png"}
-                    alt="Auth illustration"
-                    width={900}
-                    height={900}
+                    alt="Image"
                     className={isLogin ? "_left_img" : ""}
-                    priority
                   />
                 </div>
                 {!isLogin ? (
                   <div className="_social_registration_right_image_dark">
-                    <Image src="/buddy-script/assets/images/registration1.png" alt="Auth illustration dark" width={900} height={900} />
+                    <img src="/buddy-script/assets/images/registration1.png" alt="Image" />
                   </div>
                 ) : null}
               </div>
@@ -134,7 +129,7 @@ export function AuthShell({ mode }: AuthShellProps) {
             <div className="col-xl-4 col-lg-4 col-md-12 col-sm-12">
               <div className={isLogin ? "_social_login_content" : "_social_registration_content"}>
                 <div className={isLogin ? "_social_login_left_logo _mar_b28" : "_social_registration_right_logo _mar_b28"}>
-                  <Image src="/buddy-script/assets/images/logo.svg" alt="Buddy Script" width={180} height={52} className={isLogin ? "_left_logo" : "_right_logo"} />
+                  <img src="/buddy-script/assets/images/logo.svg" alt="Image" className={isLogin ? "_left_logo" : "_right_logo"} />
                 </div>
                 <p className={isLogin ? "_social_login_content_para _mar_b8" : "_social_registration_content_para _mar_b8"}>
                   {isLogin ? "Welcome back" : "Get Started Now"}
@@ -144,7 +139,7 @@ export function AuthShell({ mode }: AuthShellProps) {
                 </h4>
 
                 <button type="button" className={isLogin ? "_social_login_content_btn _mar_b40" : "_social_registration_content_btn _mar_b40"}>
-                  <Image src="/buddy-script/assets/images/google.svg" alt="Google" width={22} height={22} className="_google_img" />
+                  <img src="/buddy-script/assets/images/google.svg" alt="Image" className="_google_img" />
                   <span>{isLogin ? "Or sign-in with google" : "Register with google"}</span>
                 </button>
 
@@ -157,14 +152,14 @@ export function AuthShell({ mode }: AuthShellProps) {
                 {isLogin ? (
                   <form className="_social_login_form" onSubmit={handleLogin}>
                     <div className="row">
-                      <div className="col-12">
+                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_login_form_input _mar_b14">
                           <label className="_social_login_label _mar_b8">Email</label>
                           <input type="email" className="form-control _social_login_input" {...loginForm.register("email")} />
                           {loginForm.formState.errors.email ? <p className="mt-2 text-sm text-rose-500">{loginForm.formState.errors.email.message}</p> : null}
                         </div>
                       </div>
-                      <div className="col-12">
+                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_login_form_input _mar_b14">
                           <label className="_social_login_label _mar_b8">Password</label>
                           <input type="password" className="form-control _social_login_input" {...loginForm.register("password")} />
@@ -173,10 +168,25 @@ export function AuthShell({ mode }: AuthShellProps) {
                       </div>
                     </div>
                     <div className="row">
+                      <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
+                        <div className="form-check _social_login_form_check">
+                          <input className="form-check-input _social_login_form_check_input" type="checkbox" name="remember" id="rememberMe" defaultChecked />
+                          <label className="form-check-label _social_login_form_check_label" htmlFor="rememberMe">
+                            Remember me
+                          </label>
+                        </div>
+                      </div>
+                      <div className="col-lg-6 col-xl-6 col-md-6 col-sm-12">
+                        <div className="_social_login_form_left">
+                          <p className="_social_login_form_left_para">Forgot password?</p>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row">
                       <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                         <div className="_social_login_form_btn _mar_t40 _mar_b60">
                           <button type="submit" className="_social_login_form_btn_link _btn1" disabled={loginForm.formState.isSubmitting}>
-                            {loginForm.formState.isSubmitting ? "Signing in..." : "Login now"}
+                            {loginForm.formState.isSubmitting ? "Loading..." : "Login now"}
                           </button>
                         </div>
                       </div>
@@ -185,39 +195,35 @@ export function AuthShell({ mode }: AuthShellProps) {
                 ) : (
                   <form className="_social_registration_form" onSubmit={handleRegister}>
                     <div className="row">
-                      <div className="col-12">
-                        <div className="_social_registration_form_input _mar_b14">
-                          <label className="_social_registration_label _mar_b8">First name</label>
-                          <input type="text" className="form-control _social_registration_input" {...registerForm.register("firstName")} />
-                          {registerForm.formState.errors.firstName ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.firstName.message}</p> : null}
-                        </div>
-                      </div>
-                      <div className="col-12">
-                        <div className="_social_registration_form_input _mar_b14">
-                          <label className="_social_registration_label _mar_b8">Last name</label>
-                          <input type="text" className="form-control _social_registration_input" {...registerForm.register("lastName")} />
-                          {registerForm.formState.errors.lastName ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.lastName.message}</p> : null}
-                        </div>
-                      </div>
-                      <div className="col-12">
+                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_registration_form_input _mar_b14">
                           <label className="_social_registration_label _mar_b8">Email</label>
                           <input type="email" className="form-control _social_registration_input" {...registerForm.register("email")} />
                           {registerForm.formState.errors.email ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.email.message}</p> : null}
                         </div>
                       </div>
-                      <div className="col-12">
+                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_registration_form_input _mar_b14">
                           <label className="_social_registration_label _mar_b8">Password</label>
                           <input type="password" className="form-control _social_registration_input" {...registerForm.register("password")} />
                           {registerForm.formState.errors.password ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.password.message}</p> : null}
                         </div>
                       </div>
-                      <div className="col-12">
+                      <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_registration_form_input _mar_b14">
-                          <label className="_social_registration_label _mar_b8">Confirm password</label>
-                          <input type="password" className="form-control _social_registration_input" {...registerForm.register("confirmPassword")} />
-                          {registerForm.formState.errors.confirmPassword ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.confirmPassword.message}</p> : null}
+                          <label className="_social_registration_label _mar_b8">Repeat Password</label>
+                          <input type="password" className="form-control _social_registration_input" {...registerForm.register("repeatPassword")} />
+                          {registerForm.formState.errors.repeatPassword ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.repeatPassword.message}</p> : null}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="row">
+                      <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
+                        <div className="form-check _social_registration_form_check">
+                          <input className="form-check-input _social_registration_form_check_input" type="checkbox" name="terms" id="termsCheck" defaultChecked />
+                          <label className="form-check-label _social_registration_form_check_label" htmlFor="termsCheck">
+                            I agree to terms &amp; conditions
+                          </label>
                         </div>
                       </div>
                     </div>
@@ -225,7 +231,7 @@ export function AuthShell({ mode }: AuthShellProps) {
                       <div className="col-lg-12 col-xl-12 col-md-12 col-sm-12">
                         <div className="_social_registration_form_btn _mar_t40 _mar_b60">
                           <button type="submit" className="_social_registration_form_btn_link _btn1" disabled={registerForm.formState.isSubmitting}>
-                            {registerForm.formState.isSubmitting ? "Creating account..." : "Create account"}
+                            {registerForm.formState.isSubmitting ? "Loading..." : "Register now"}
                           </button>
                         </div>
                       </div>
@@ -234,7 +240,7 @@ export function AuthShell({ mode }: AuthShellProps) {
                 )}
 
                 <div className="row">
-                  <div className="col-12">
+                  <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                     <div className={isLogin ? "_social_login_bottom_txt" : "_social_registration_bottom_txt"}>
                       <p className={isLogin ? "_social_login_bottom_txt_para" : "_social_registration_bottom_txt_para"}>
                         {isLogin ? (
@@ -250,8 +256,6 @@ export function AuthShell({ mode }: AuthShellProps) {
                     </div>
                   </div>
                 </div>
-
-                {auth.user ? <p className="mt-4 text-sm text-emerald-600">Signed in as {auth.user.email}</p> : null}
               </div>
             </div>
           </div>

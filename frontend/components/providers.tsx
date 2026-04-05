@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, createContext, useContext, type ReactNode } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useEffect, useState, createContext, useContext, type ReactNode } from "react";
 import { api } from "../lib/api";
 import { clearAccessToken, setAccessToken } from "../lib/session";
 import type { ApiUser } from "../lib/types";
@@ -28,7 +27,6 @@ export const useAuth = () => {
 };
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const queryClient = useMemo(() => new QueryClient(), []);
   const [user, setUser] = useState<ApiUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -80,8 +78,6 @@ export default function Providers({ children }: { children: ReactNode }) {
   };
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
-    </QueryClientProvider>
+    <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
   );
 }
