@@ -49,3 +49,13 @@ select {
   background: rgba(99, 102, 241, 0.32);
   border-radius: 999px;
 }
+
+@media (min-width: 992px) {
+  ._header_nav .collapse.navbar-collapse {
+    display: flex !important;
+  }
+
+  ._layout_inner_wrap {
+    padding-top: 86px !important;
+  }
+}
