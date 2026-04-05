@@ -29,6 +29,8 @@ const likedByText = (users: Array<{ firstName: string; lastName: string }>) => {
   return users.slice(0, 5).map(toName).join(", ");
 };
 
+const isTempEntityId = (id: string) => id.startsWith("temp-");
+
 export default function MiddleColumn() {
   const auth = useAuth();
 
@@ -96,36 +98,74 @@ export default function MiddleColumn() {
   );
 
   const handleCreatePost = useCallback(async () => {
+    if (composerBusy) return;
+
     if (!composerContent.trim() && !composerFile) {
       setComposerError("Write something or choose an image.");
       return;
     }
 
+    const content = composerContent.trim() || "Image post";
+    const file = composerFile;
+    const visibility = composerVisibility;
+    const tempId = `temp-post-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const now = new Date().toISOString();
+    const optimisticAuthor = auth.user ?? {
+      id: "optimistic-user",
+      firstName: "You",
+      lastName: "",
+      email: "you@example.com",
+    };
+
+    const optimisticPost: ApiPost = {
+      id: tempId,
+      content,
+      imageUrl: file ? URL.createObjectURL(file) : null,
+      visibility,
+      likeCount: 0,
+      commentCount: 0,
+      createdAt: now,
+      updatedAt: now,
+      author: optimisticAuthor,
+      viewerLiked: false,
+      likedBy: [],
+      comments: [],
+    };
+
     setComposerBusy(true);
     setComposerError(null);
+    setComposerContent("");
+    setComposerVisibility("PUBLIC");
+    setComposerFile(null);
+    setPosts((prev) => [optimisticPost, ...prev]);
+
     try {
       let imageUrl: string | null = null;
-      if (composerFile) {
-        const upload = await api.uploadImage(composerFile);
+      if (file) {
+        const upload = await api.uploadImage(file);
         imageUrl = upload.imageUrl;
       }
 
       const created = await api.createPost({
-        content: composerContent.trim() || "Image post",
+        content,
         imageUrl,
-        visibility: composerVisibility,
+        visibility,
       });
 
-      setPosts((prev) => [created, ...prev]);
-      setComposerContent("");
-      setComposerVisibility("PUBLIC");
-      setComposerFile(null);
+      setPosts((prev) => prev.map((post) => (post.id === tempId ? created : post)));
     } catch {
+      setPosts((prev) => prev.filter((post) => post.id !== tempId));
+      setComposerContent(content);
+      setComposerVisibility(visibility);
+      setComposerFile(file);
       setComposerError("Unable to publish post right now.");
     } finally {
+      if (optimisticPost.imageUrl) {
+        URL.revokeObjectURL(optimisticPost.imageUrl);
+      }
       setComposerBusy(false);
     }
-  }, [composerContent, composerFile, composerVisibility]);
+  }, [auth.user, composerBusy, composerContent, composerFile, composerVisibility]);
 
   const handleToggleComments = useCallback(
     async (postId: string) => {
@@ -149,6 +189,8 @@ export default function MiddleColumn() {
   const handleToggleLike = useCallback(
     async (type: LikeType, targetId: string, postId: string) => {
       const busyKey = `like:${type}:${targetId}`;
+      if (actionBusy[busyKey]) return;
+
       setBusy(busyKey, true);
 
       let rollbackPost: ApiPost | null = null;
@@ -247,7 +289,7 @@ export default function MiddleColumn() {
         setBusy(busyKey, false);
       }
     },
-    [setBusy, updatePost],
+    [actionBusy, setBusy, updatePost],
   );
 
   const handleAddComment = useCallback(
@@ -256,6 +298,8 @@ export default function MiddleColumn() {
       if (!content) return;
 
       const busyKey = `comment:${postId}`;
+      if (actionBusy[busyKey]) return;
+
       setBusy(busyKey, true);
 
       const tempId = `temp-comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -311,7 +355,7 @@ export default function MiddleColumn() {
         setBusy(busyKey, false);
       }
     },
-    [auth.user, commentInputs, setBusy, updatePost],
+    [actionBusy, auth.user, commentInputs, setBusy, updatePost],
   );
 
   const handleAddReply = useCallback(
@@ -321,6 +365,8 @@ export default function MiddleColumn() {
       if (!content) return;
 
       const busyKey = `reply:${key}`;
+      if (actionBusy[busyKey]) return;
+
       setBusy(busyKey, true);
 
       const tempId = `temp-reply-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -390,7 +436,7 @@ export default function MiddleColumn() {
         setBusy(busyKey, false);
       }
     },
-    [auth.user, replyInputs, setBusy, updatePost],
+    [actionBusy, auth.user, replyInputs, setBusy, updatePost],
   );
 
   const totalPosts = useMemo(() => posts.length, [posts.length]);
@@ -501,6 +547,11 @@ export default function MiddleColumn() {
 
         {posts.map((post) => (
           <div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16" key={post.id}>
+            {isTempEntityId(post.id) ? (
+              <div className="_padd_r24 _padd_l24 _mar_b10">
+                <small className="text-xs opacity-70">Syncing post...</small>
+              </div>
+            ) : null}
             <div className="_feed_inner_timeline_content _padd_r24 _padd_l24">
               <div className="_feed_inner_timeline_post_top">
                 <div className="_feed_inner_timeline_post_box">
@@ -541,12 +592,17 @@ export default function MiddleColumn() {
               <button
                 className={`_feed_inner_timeline_reaction_emoji _feed_reaction ${post.viewerLiked ? "_feed_reaction_active" : ""}`}
                 type="button"
-                disabled={!!actionBusy[`like:POST:${post.id}`]}
+                disabled={!!actionBusy[`like:POST:${post.id}`] || isTempEntityId(post.id)}
                 onClick={() => handleToggleLike("POST", post.id, post.id)}
               >
                 <span className="_feed_inner_timeline_reaction_link">{post.viewerLiked ? "Unlike" : "Like"}</span>
               </button>
-              <button className="_feed_inner_timeline_reaction_comment _feed_reaction" type="button" onClick={() => handleToggleComments(post.id)}>
+              <button
+                className="_feed_inner_timeline_reaction_comment _feed_reaction"
+                type="button"
+                disabled={isTempEntityId(post.id)}
+                onClick={() => handleToggleComments(post.id)}
+              >
                 <span className="_feed_inner_timeline_reaction_link">Comment</span>
               </button>
             </div>
@@ -583,6 +639,11 @@ export default function MiddleColumn() {
 
                 {(post.comments ?? []).map((comment: ApiComment) => (
                   <div className="_comment_main _mar_b16" key={comment.id}>
+                    {isTempEntityId(comment.id) ? (
+                      <div className="_mar_b8">
+                        <small className="text-xs opacity-70">Syncing comment...</small>
+                      </div>
+                    ) : null}
                     <div className="_comment_area" style={{ width: "100%" }}>
                       <div className="_comment_details">
                         <h4 className="_comment_details_title">{toName(comment.author)}</h4>
@@ -593,7 +654,7 @@ export default function MiddleColumn() {
                         <button
                           type="button"
                           className="_feed_inner_text_area_btn_link"
-                          disabled={!!actionBusy[`like:COMMENT:${comment.id}`]}
+                          disabled={!!actionBusy[`like:COMMENT:${comment.id}`] || isTempEntityId(comment.id)}
                           onClick={() => handleToggleLike("COMMENT", comment.id, post.id)}
                         >
                           {comment.viewerLiked ? "Unlike" : "Like"} ({comment.likeCount})
@@ -616,7 +677,7 @@ export default function MiddleColumn() {
                         <button
                           type="button"
                           className="_feed_inner_text_area_btn_link _mar_t8"
-                          disabled={!!actionBusy[`reply:${post.id}:${comment.id}`]}
+                          disabled={!!actionBusy[`reply:${post.id}:${comment.id}`] || isTempEntityId(comment.id)}
                           onClick={() => handleAddReply(post.id, comment.id)}
                         >
                           {actionBusy[`reply:${post.id}:${comment.id}`] ? "Adding..." : "Add Reply"}
@@ -625,6 +686,11 @@ export default function MiddleColumn() {
 
                       {comment.replies.map((reply) => (
                         <div className="_mar_t8 _mar_l16" key={reply.id}>
+                          {isTempEntityId(reply.id) ? (
+                            <div className="_mar_b4">
+                              <small className="text-xs opacity-70">Syncing reply...</small>
+                            </div>
+                          ) : null}
                           <p>
                             <strong>{toName(reply.author)}</strong>: {reply.content}
                           </p>
@@ -632,7 +698,7 @@ export default function MiddleColumn() {
                           <button
                             type="button"
                             className="_feed_inner_text_area_btn_link"
-                            disabled={!!actionBusy[`like:REPLY:${reply.id}`]}
+                            disabled={!!actionBusy[`like:REPLY:${reply.id}`] || isTempEntityId(reply.id)}
                             onClick={() => handleToggleLike("REPLY", reply.id, post.id)}
                           >
                             {reply.viewerLiked ? "Unlike" : "Like"} ({reply.likeCount})
