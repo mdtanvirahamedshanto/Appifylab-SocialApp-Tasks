@@ -1,4 +1,23 @@
-import { exploreItems, feedPeople } from "./feed-data";
+import { feedPeople } from "./feed-data";
+
+const exploreItems = [
+  { label: "Learning", href: "#0", isNew: true },
+  { label: "Insights", href: "#0" },
+  { label: "Find friends", href: "#0" },
+  { label: "Bookmarks", href: "#0" },
+  { label: "Group", href: "#0" },
+  { label: "Gaming", href: "#0", isNew: true },
+  { label: "Settings", href: "#0" },
+  { label: "Save post", href: "#0" },
+];
+
+function ExploreIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20">
+      <path fill="#666" d="M10 0c5.523 0 10 4.477 10 10s-4.477 10-10 10S0 15.523 0 10 4.477 0 10 0zm0 1.395a8.605 8.605 0 100 17.21 8.605 8.605 0 000-17.21z" />
+    </svg>
+  );
+}
 
 export default function LeftSidebar() {
   return (
@@ -8,10 +27,12 @@ export default function LeftSidebar() {
           <h4 className="_left_inner_area_explore_title _title5 _mar_b24">Explore</h4>
           <ul className="_left_inner_area_explore_list">
             {exploreItems.map((item) => (
-              <li className="_left_inner_area_explore_item" key={item}>
-                <a href="#0" className="_left_inner_area_explore_link">
-                  {item}
+              <li className={`_left_inner_area_explore_item ${item.isNew ? "_explore_item" : ""}`} key={item.label}>
+                <a href={item.href} className="_left_inner_area_explore_link">
+                  <ExploreIcon />
+                  {item.label}
                 </a>
+                {item.isNew ? <span className="_left_inner_area_explore_link_txt">New</span> : null}
               </li>
             ))}
           </ul>
@@ -32,10 +53,14 @@ export default function LeftSidebar() {
             <div className="_left_inner_area_suggest_info" key={person.name}>
               <div className="_left_inner_area_suggest_info_box">
                 <div className="_left_inner_area_suggest_info_image">
-                  <img src={`/buddy-script/assets/images/${person.image}`} alt="Image" className="_info_img" />
+                  <a href="#0">
+                    <img src={`/buddy-script/assets/images/${person.image}`} alt="Image" className="_info_img" />
+                  </a>
                 </div>
                 <div className="_left_inner_area_suggest_info_txt">
-                  <h4 className="_left_inner_area_suggest_info_title">{person.name}</h4>
+                  <a href="#0">
+                    <h4 className="_left_inner_area_suggest_info_title">{person.name}</h4>
+                  </a>
                   <p className="_left_inner_area_suggest_info_para">{person.role}</p>
                 </div>
               </div>

@@ -37,6 +37,11 @@ export default function RightSidebar() {
           <div className="_feed_top_fixed">
             <div className="_feed_right_inner_area_card_content _mar_b24">
               <h4 className="_feed_right_inner_area_card_content_title _title5">Your Friends</h4>
+              <span className="_right_inner_area_info_content_txt">
+                <a className="_right_inner_area_info_content_txt_link" href="#0">
+                  See All
+                </a>
+              </span>
             </div>
             <form className="_feed_right_inner_area_card_form">
               <svg className="_feed_right_inner_area_card_form_svg" xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" viewBox="0 0 17 17">

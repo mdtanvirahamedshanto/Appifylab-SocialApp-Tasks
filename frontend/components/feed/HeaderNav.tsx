@@ -91,7 +91,7 @@ export default function HeaderNav({
           <span className="navbar-toggler-icon" />
         </button>
 
-        <div className="navbar-collapse" id="navbarSupportedContent">
+        <div className="collapse navbar-collapse" id="navbarSupportedContent">
           <div className="_header_form ms-auto">
             <form className="_header_form_grp">
               <svg className="_header_form_svg" xmlns="http://www.w3.org/2000/svg" width="17" height="17" fill="none" viewBox="0 0 17 17">
