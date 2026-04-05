@@ -47,9 +47,12 @@ export default function MiddleColumn() {
   const [composerError, setComposerError] = useState<string | null>(null);
 
   const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
+  const [showAllComments, setShowAllComments] = useState<Record<string, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [actionBusy, setActionBusy] = useState<Record<string, boolean>>({});
+  const [shareCountByPost, setShareCountByPost] = useState<Record<string, number>>({});
+  const [shareStatusByPost, setShareStatusByPost] = useState<Record<string, string>>({});
 
   const setBusy = useCallback((key: string, busy: boolean) => {
     setActionBusy((prev) => ({ ...prev, [key]: busy }));
@@ -184,6 +187,42 @@ export default function MiddleColumn() {
       }
     },
     [ensurePostDetails, expandedPosts, setBusy],
+  );
+
+  const handleSharePost = useCallback(
+    async (postId: string, content: string) => {
+      const busyKey = `share:${postId}`;
+      if (actionBusy[busyKey]) return;
+
+      setBusy(busyKey, true);
+      const shareUrl = typeof window !== "undefined" ? `${window.location.origin}/feed?post=${postId}` : `/feed?post=${postId}`;
+
+      try {
+        if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
+          await navigator.share({
+            title: "Buddy Social Post",
+            text: content.slice(0, 140),
+            url: shareUrl,
+          });
+          setShareStatusByPost((prev) => ({ ...prev, [postId]: "Shared" }));
+        } else if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+          await navigator.clipboard.writeText(shareUrl);
+          setShareStatusByPost((prev) => ({ ...prev, [postId]: "Link copied" }));
+        } else {
+          throw new Error("Share is not supported");
+        }
+
+        setShareCountByPost((prev) => ({ ...prev, [postId]: (prev[postId] ?? 0) + 1 }));
+        window.setTimeout(() => {
+          setShareStatusByPost((prev) => ({ ...prev, [postId]: "" }));
+        }, 2200);
+      } catch {
+        setFeedError("Unable to share right now.");
+      } finally {
+        setBusy(busyKey, false);
+      }
+    },
+    [actionBusy, setBusy],
   );
 
   const handleToggleLike = useCallback(
@@ -505,6 +544,24 @@ export default function MiddleColumn() {
                 Write something ...
               </label>
             </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                className={`_feed_inner_text_area_btn_link ${composerVisibility === "PUBLIC" ? "" : "opacity-60"}`}
+                onClick={() => setComposerVisibility("PUBLIC")}
+                aria-pressed={composerVisibility === "PUBLIC"}
+              >
+                Public
+              </button>
+              <button
+                type="button"
+                className={`_feed_inner_text_area_btn_link ${composerVisibility === "PRIVATE" ? "" : "opacity-60"}`}
+                onClick={() => setComposerVisibility("PRIVATE")}
+                aria-pressed={composerVisibility === "PRIVATE"}
+              >
+                Private
+              </button>
+            </div>
           </div>
 
           <div className="_feed_inner_text_area_bottom">
@@ -561,15 +618,6 @@ export default function MiddleColumn() {
             </div>
 
             <div className="_feed_inner_text_area_btn">
-              <select
-                className="_feed_inner_text_area_bottom_photo_link _mar_r8"
-                value={composerVisibility}
-                onChange={(event) => setComposerVisibility(event.target.value as PostVisibility)}
-                aria-label="Post visibility"
-              >
-                <option value="PUBLIC">Public</option>
-                <option value="PRIVATE">Private</option>
-              </select>
               <button type="button" className="_feed_inner_text_area_btn_link" onClick={handleCreatePost} disabled={composerBusy}>
                 <span>{composerBusy ? "Posting..." : "Post"}</span>
               </button>
@@ -623,6 +671,9 @@ export default function MiddleColumn() {
                     <span>{post.commentCount}</span> Comment
                   </a>
                 </p>
+                <p className="_feed_inner_timeline_total_reacts_para2">
+                  <span>{shareCountByPost[post.id] ?? 0}</span> Share
+                </p>
               </div>
             </div>
 
@@ -643,7 +694,23 @@ export default function MiddleColumn() {
               >
                 <span className="_feed_inner_timeline_reaction_link">Comment</span>
               </button>
+              <button
+                className="_feed_inner_timeline_reaction_share _feed_reaction"
+                type="button"
+                disabled={!!actionBusy[`share:${post.id}`] || isTempEntityId(post.id)}
+                onClick={() => handleSharePost(post.id, post.content)}
+              >
+                <span className="_feed_inner_timeline_reaction_link">
+                  {actionBusy[`share:${post.id}`] ? "Sharing..." : "Share"}
+                </span>
+              </button>
             </div>
+
+            {shareStatusByPost[post.id] ? (
+              <div className="_padd_r24 _padd_l24 _mar_t8">
+                <small className="text-xs opacity-70">{shareStatusByPost[post.id]}</small>
+              </div>
+            ) : null}
 
             <div className="_padd_r24 _padd_l24 _mar_t8">
               <small>Liked by: {likedByText(post.likedBy)}</small>
@@ -657,36 +724,67 @@ export default function MiddleColumn() {
                       <img src="/buddy-script/assets/images/comment_img.png" alt="Image" className="_comment_img" />
                     </div>
                     <div className="_feed_inner_comment_box_content_txt">
-                      <textarea
+                      <input
                         className="form-control _comment_textarea"
                         placeholder="Write a comment"
                         value={commentInputs[post.id] ?? ""}
                         onChange={(event) => setCommentInputs((prev) => ({ ...prev, [post.id]: event.target.value }))}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" && !event.shiftKey) {
+                            event.preventDefault();
+                            void handleAddComment(post.id);
+                          }
+                        }}
                       />
                       <button
                         type="button"
                         className="_feed_inner_text_area_btn_link _mar_t8"
                         disabled={!!actionBusy[`comment:${post.id}`]}
                         onClick={() => handleAddComment(post.id)}
+                        aria-label="Add comment"
                       >
-                        {actionBusy[`comment:${post.id}`] ? "Adding..." : "Add Comment"}
+                        {actionBusy[`comment:${post.id}`] ? "Adding..." : "Send"}
                       </button>
                     </div>
                   </div>
                 </div>
 
-                {(post.comments ?? []).map((comment: ApiComment) => (
-                  <div className="_comment_main _mar_b16" key={comment.id}>
+                {(() => {
+                  const allComments = post.comments ?? [];
+                  const isAllVisible = !!showAllComments[post.id];
+                  const visibleComments = isAllVisible ? allComments : allComments.slice(0, 2);
+                  const hiddenCount = Math.max(0, allComments.length - visibleComments.length);
+
+                  return (
+                    <>
+                      {hiddenCount > 0 ? (
+                        <div className="_previous_comment _mar_b12">
+                          <button
+                            type="button"
+                            className="_previous_comment_txt"
+                            onClick={() => setShowAllComments((prev) => ({ ...prev, [post.id]: true }))}
+                          >
+                            View {hiddenCount} previous comments
+                          </button>
+                        </div>
+                      ) : null}
+
+                      {visibleComments.map((comment: ApiComment) => (
+                        <div className="_comment_main _mar_b16" key={comment.id}>
                     {isTempEntityId(comment.id) ? (
                       <div className="_mar_b8">
                         <small className="text-xs opacity-70">Syncing comment...</small>
                       </div>
                     ) : null}
+                    <div className="_comment_image">
+                      <a href="#0" className="_comment_image_link">
+                        <img src="/buddy-script/assets/images/txt_img.png" alt="Image" className="_comment_img1" />
+                      </a>
+                    </div>
                     <div className="_comment_area" style={{ width: "100%" }}>
                       <div className="_comment_details">
                         <h4 className="_comment_details_title">{toName(comment.author)}</h4>
                         <p className="_comment_details_para">{comment.content}</p>
-                        <p className="text-xs">{formatRelative(comment.createdAt)}</p>
                       </div>
                       <div className="_comment_reacts _mar_t8">
                         <button
@@ -697,11 +795,31 @@ export default function MiddleColumn() {
                         >
                           {comment.viewerLiked ? "Unlike" : "Like"} ({comment.likeCount})
                         </button>
+                        <button
+                          type="button"
+                          className="_feed_inner_text_area_btn_link _mar_l8"
+                          onClick={() => handleSharePost(post.id, comment.content)}
+                          disabled={!!actionBusy[`share:${post.id}`]}
+                        >
+                          Share
+                        </button>
+                        <button
+                          type="button"
+                          className="_feed_inner_text_area_btn_link _mar_l8"
+                          onClick={() => {
+                            const key = `${post.id}:${comment.id}`;
+                            const current = replyInputs[key] ?? "";
+                            setReplyInputs((prev) => ({ ...prev, [key]: current }));
+                          }}
+                        >
+                          Reply
+                        </button>
+                        <span className="_mar_l8 text-xs">{formatRelative(comment.createdAt)}</span>
                         <small className="_mar_l8">Liked by: {likedByText(comment.likedBy)}</small>
                       </div>
 
                       <div className="_mar_t8">
-                        <textarea
+                        <input
                           className="form-control _comment_textarea"
                           placeholder="Write a reply"
                           value={replyInputs[`${post.id}:${comment.id}`] ?? ""}
@@ -711,6 +829,12 @@ export default function MiddleColumn() {
                               [`${post.id}:${comment.id}`]: event.target.value,
                             }))
                           }
+                          onKeyDown={(event) => {
+                            if (event.key === "Enter" && !event.shiftKey) {
+                              event.preventDefault();
+                              void handleAddReply(post.id, comment.id);
+                            }
+                          }}
                         />
                         <button
                           type="button"
@@ -718,7 +842,7 @@ export default function MiddleColumn() {
                           disabled={!!actionBusy[`reply:${post.id}:${comment.id}`] || isTempEntityId(comment.id)}
                           onClick={() => handleAddReply(post.id, comment.id)}
                         >
-                          {actionBusy[`reply:${post.id}:${comment.id}`] ? "Adding..." : "Add Reply"}
+                          {actionBusy[`reply:${post.id}:${comment.id}`] ? "Adding..." : "Reply"}
                         </button>
                       </div>
 
@@ -741,12 +865,23 @@ export default function MiddleColumn() {
                           >
                             {reply.viewerLiked ? "Unlike" : "Like"} ({reply.likeCount})
                           </button>
+                          <button
+                            type="button"
+                            className="_feed_inner_text_area_btn_link _mar_l8"
+                            onClick={() => handleSharePost(post.id, reply.content)}
+                            disabled={!!actionBusy[`share:${post.id}`] || isTempEntityId(reply.id)}
+                          >
+                            Share
+                          </button>
                           <small className="_mar_l8">Liked by: {likedByText(reply.likedBy)}</small>
                         </div>
                       ))}
                     </div>
-                  </div>
-                ))}
+                        </div>
+                      ))}
+                    </>
+                  );
+                })()}
               </div>
             ) : null}
           </div>
