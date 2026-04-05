@@ -1,5 +1,16 @@
 import { feedPeople } from "./feed-data";
 
+const friendRows = [
+  { person: feedPeople[0], inactive: true, time: "5 minute ago" },
+  { person: feedPeople[1], inactive: false },
+  { person: feedPeople[2], inactive: false },
+  { person: feedPeople[0], inactive: true, time: "5 minute ago" },
+  { person: feedPeople[1], inactive: false },
+  { person: feedPeople[2], inactive: false },
+  { person: feedPeople[2], inactive: false },
+  { person: feedPeople[0], inactive: true, time: "5 minute ago" },
+];
+
 export default function RightSidebar() {
   return (
     <div className="_layout_right_sidebar_wrap">
@@ -53,9 +64,8 @@ export default function RightSidebar() {
           </div>
 
           <div className="_feed_bottom_fixed">
-            {Array.from({ length: 8 }).map((_, idx) => {
-              const person = feedPeople[idx % feedPeople.length];
-              const inactive = idx % 3 === 0;
+            {friendRows.map((row, idx) => {
+              const { person, inactive, time } = row;
               return (
                 <div className={`_feed_right_inner_area_card_ppl ${inactive ? "_feed_right_inner_area_card_ppl_inactive" : ""}`} key={idx}>
                   <div className="_feed_right_inner_area_card_ppl_box">
@@ -68,7 +78,7 @@ export default function RightSidebar() {
                     </div>
                   </div>
                   <div className="_feed_right_inner_area_card_ppl_side">
-                    {inactive ? <span>5 minute ago</span> : <span className="_online_dot" />}
+                    {inactive ? <span>{time ?? "5 minute ago"}</span> : <span className="_online_dot" />}
                   </div>
                 </div>
               );
