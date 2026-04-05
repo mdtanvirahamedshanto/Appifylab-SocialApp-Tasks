@@ -53,6 +53,29 @@ select {
 @media (min-width: 992px) {
   ._header_nav .collapse.navbar-collapse {
     display: flex !important;
+    align-items: center;
+    flex-wrap: nowrap !important;
+  }
+
+  ._header_nav ._header_form {
+    margin-left: auto;
+    flex: 0 0 auto;
+  }
+
+  ._header_nav ._header_form ._inpt1 {
+    width: 424px !important;
+    min-width: 424px;
+  }
+
+  ._header_nav ._header_nav_list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    margin-left: auto !important;
+  }
+
+  ._header_nav ._header_nav_profile {
+    flex: 0 0 auto;
   }
 
   ._layout_inner_wrap {
