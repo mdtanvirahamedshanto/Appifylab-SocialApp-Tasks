@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/prisma.js";
 import { AppError } from "../utils/AppError.js";
 import { buildCursor, parseCursor, parseLimit } from "../utils/pagination.js";
@@ -413,6 +414,34 @@ const getLikeWhere = (userId: string, target: LikeTarget) => {
   return { userId_replyId: { userId, replyId: target.targetId } };
 };
 
+const createLikeData = (input: { userId: string } & LikeTarget) => {
+  if (input.type === LikeTypeValues.POST) {
+    return { userId: input.userId, type: input.type, postId: input.targetId } as const;
+  }
+
+  if (input.type === LikeTypeValues.COMMENT) {
+    return { userId: input.userId, type: input.type, commentId: input.targetId } as const;
+  }
+
+  return { userId: input.userId, type: input.type, replyId: input.targetId } as const;
+};
+
+const updateLikeCounter = async (target: LikeTarget, operation: "increment" | "decrement") => {
+  const data = { likeCount: { [operation]: 1 } } as const;
+
+  if (target.type === LikeTypeValues.POST) {
+    await prisma.post.update({ where: { id: target.targetId }, data });
+    return;
+  }
+
+  if (target.type === LikeTypeValues.COMMENT) {
+    await prisma.comment.update({ where: { id: target.targetId }, data });
+    return;
+  }
+
+  await prisma.reply.update({ where: { id: target.targetId }, data });
+};
+
 const getTargetSelect = (target: LikeTarget) => {
   if (target.type === LikeTypeValues.POST) {
     return {
@@ -459,60 +488,35 @@ const findTargetOrThrow = async (target: LikeTarget) => {
 };
 
 export const toggleLike = async (input: { userId: string } & LikeTarget) => {
-  const result = await prisma.$transaction(async (tx) => {
-    await ensureLikeTargetAccessible(tx, input);
+  await ensureLikeTargetAccessible(prisma, input);
 
-    const existingLike = await tx.like.findFirst({
-      where: {
-        userId: input.userId,
-        ...(input.type === LikeTypeValues.POST
-          ? { postId: input.targetId }
-          : input.type === LikeTypeValues.COMMENT
-            ? { commentId: input.targetId }
-            : { replyId: input.targetId }),
-      },
-    });
-
-    if (existingLike) {
-      await tx.like.delete({ where: { id: existingLike.id } });
-      if (input.type === LikeTypeValues.POST) {
-        await tx.post.update({ where: { id: input.targetId }, data: { likeCount: { decrement: 1 } } });
-      } else if (input.type === LikeTypeValues.COMMENT) {
-        await tx.comment.update({ where: { id: input.targetId }, data: { likeCount: { decrement: 1 } } });
-      } else {
-        await tx.reply.update({ where: { id: input.targetId }, data: { likeCount: { decrement: 1 } } });
+  let liked = false;
+  try {
+    await prisma.like.delete({ where: getLikeWhere(input.userId, input) });
+    await updateLikeCounter(input, "decrement");
+    liked = false;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2025") {
+      try {
+        await prisma.like.create({ data: createLikeData(input) });
+        await updateLikeCounter(input, "increment");
+        liked = true;
+      } catch (createError) {
+        if (createError instanceof Prisma.PrismaClientKnownRequestError && createError.code === "P2002") {
+          liked = true;
+        } else {
+          throw createError;
+        }
       }
-      return { liked: false };
-    }
-
-    if (input.type === LikeTypeValues.POST) {
-      await tx.like.create({
-        data: { userId: input.userId, type: input.type, postId: input.targetId },
-      });
-    } else if (input.type === LikeTypeValues.COMMENT) {
-      await tx.like.create({
-        data: { userId: input.userId, type: input.type, commentId: input.targetId },
-      });
     } else {
-      await tx.like.create({
-        data: { userId: input.userId, type: input.type, replyId: input.targetId },
-      });
+      throw error;
     }
-
-    if (input.type === LikeTypeValues.POST) {
-      await tx.post.update({ where: { id: input.targetId }, data: { likeCount: { increment: 1 } } });
-    } else if (input.type === LikeTypeValues.COMMENT) {
-      await tx.comment.update({ where: { id: input.targetId }, data: { likeCount: { increment: 1 } } });
-    } else {
-      await tx.reply.update({ where: { id: input.targetId }, data: { likeCount: { increment: 1 } } });
-    }
-    return { liked: true };
-  });
+  }
 
   const target = await findTargetOrThrow({ type: input.type, targetId: input.targetId });
 
   return {
-    liked: result.liked,
+    liked,
     likeCount: target.likeCount,
     likedBy: target.likes.map((like: { user: { id: string; firstName: string; lastName: string; email: string } }) => like.user),
     viewerLiked: target.likes.some((like: { userId: string }) => like.userId === input.userId),
