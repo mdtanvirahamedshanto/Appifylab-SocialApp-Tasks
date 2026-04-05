@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { api } from "../../lib/api";
+import { useAuth } from "../providers";
 import type { ApiComment, ApiPost, LikeType, PostVisibility } from "../../lib/types";
 
 const storyCards = ["card_ppl2.png", "card_ppl3.png", "card_ppl4.png"];
@@ -29,6 +30,8 @@ const likedByText = (users: Array<{ firstName: string; lastName: string }>) => {
 };
 
 export default function MiddleColumn() {
+  const auth = useAuth();
+
   const [posts, setPosts] = useState<ApiPost[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
@@ -147,6 +150,54 @@ export default function MiddleColumn() {
     async (type: LikeType, targetId: string, postId: string) => {
       const busyKey = `like:${type}:${targetId}`;
       setBusy(busyKey, true);
+
+      let rollbackPost: ApiPost | null = null;
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+
+          rollbackPost = post;
+          if (type === "POST") {
+            const nextLiked = !post.viewerLiked;
+            return {
+              ...post,
+              viewerLiked: nextLiked,
+              likeCount: Math.max(0, post.likeCount + (nextLiked ? 1 : -1)),
+            };
+          }
+
+          return {
+            ...post,
+            comments: (post.comments ?? []).map((comment) => {
+              if (type === "COMMENT" && comment.id === targetId) {
+                const nextLiked = !comment.viewerLiked;
+                return {
+                  ...comment,
+                  viewerLiked: nextLiked,
+                  likeCount: Math.max(0, comment.likeCount + (nextLiked ? 1 : -1)),
+                };
+              }
+
+              return {
+                ...comment,
+                replies: comment.replies.map((reply) => {
+                  if (type === "REPLY" && reply.id === targetId) {
+                    const nextLiked = !reply.viewerLiked;
+                    return {
+                      ...reply,
+                      viewerLiked: nextLiked,
+                      likeCount: Math.max(0, reply.likeCount + (nextLiked ? 1 : -1)),
+                    };
+                  }
+
+                  return reply;
+                }),
+              };
+            }),
+          };
+        }),
+      );
+
       try {
         const result = await api.toggleLike(type, targetId);
         updatePost(postId, (post) => {
@@ -188,6 +239,9 @@ export default function MiddleColumn() {
           };
         });
       } catch {
+        if (rollbackPost) {
+          setPosts((prev) => prev.map((post) => (post.id === postId ? rollbackPost! : post)));
+        }
         setFeedError("Unable to update like right now.");
       } finally {
         setBusy(busyKey, false);
@@ -203,24 +257,61 @@ export default function MiddleColumn() {
 
       const busyKey = `comment:${postId}`;
       setBusy(busyKey, true);
+
+      const tempId = `temp-comment-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString();
+      const optimisticAuthor = auth.user ?? {
+        id: "optimistic-user",
+        firstName: "You",
+        lastName: "",
+        email: "you@example.com",
+      };
+      const optimisticComment: ApiComment = {
+        id: tempId,
+        content,
+        likeCount: 0,
+        replyCount: 0,
+        createdAt: now,
+        updatedAt: now,
+        author: optimisticAuthor,
+        viewerLiked: false,
+        likedBy: [],
+        replies: [],
+      };
+
+      let rollbackPost: ApiPost | null = null;
+      setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          rollbackPost = post;
+
+          return {
+            ...post,
+            commentCount: post.commentCount + 1,
+            comments: [optimisticComment, ...(post.comments ?? [])],
+          };
+        }),
+      );
+
       try {
-        await ensurePostDetails(postId);
         const created = await api.addComment(postId, content);
 
         updatePost(postId, (post) => ({
           ...post,
-          commentCount: post.commentCount + 1,
-          comments: [created, ...(post.comments ?? [])],
+          comments: (post.comments ?? []).map((comment) => (comment.id === tempId ? created : comment)),
         }));
-
-        setCommentInputs((prev) => ({ ...prev, [postId]: "" }));
       } catch {
+        if (rollbackPost) {
+          setPosts((prev) => prev.map((post) => (post.id === postId ? rollbackPost! : post)));
+        }
+        setCommentInputs((prev) => ({ ...prev, [postId]: content }));
         setFeedError("Unable to add comment right now.");
       } finally {
         setBusy(busyKey, false);
       }
     },
-    [commentInputs, ensurePostDetails, setBusy, updatePost],
+    [auth.user, commentInputs, setBusy, updatePost],
   );
 
   const handleAddReply = useCallback(
@@ -231,8 +322,51 @@ export default function MiddleColumn() {
 
       const busyKey = `reply:${key}`;
       setBusy(busyKey, true);
+
+      const tempId = `temp-reply-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      const now = new Date().toISOString();
+      const optimisticAuthor = auth.user ?? {
+        id: "optimistic-user",
+        firstName: "You",
+        lastName: "",
+        email: "you@example.com",
+      };
+
+      let rollbackPost: ApiPost | null = null;
+      setReplyInputs((prev) => ({ ...prev, [key]: "" }));
+      setPosts((prev) =>
+        prev.map((post) => {
+          if (post.id !== postId) return post;
+          rollbackPost = post;
+
+          return {
+            ...post,
+            comments: (post.comments ?? []).map((comment) =>
+              comment.id === commentId
+                ? {
+                    ...comment,
+                    replyCount: comment.replyCount + 1,
+                    replies: [
+                      ...comment.replies,
+                      {
+                        id: tempId,
+                        content,
+                        likeCount: 0,
+                        createdAt: now,
+                        updatedAt: now,
+                        author: optimisticAuthor,
+                        viewerLiked: false,
+                        likedBy: [],
+                      },
+                    ],
+                  }
+                : comment,
+            ),
+          };
+        }),
+      );
+
       try {
-        await ensurePostDetails(postId);
         const created = await api.addReply(commentId, content);
 
         updatePost(postId, (post) => ({
@@ -241,21 +375,22 @@ export default function MiddleColumn() {
             comment.id === commentId
               ? {
                   ...comment,
-                  replyCount: comment.replyCount + 1,
-                  replies: [...comment.replies, created],
+                  replies: comment.replies.map((reply) => (reply.id === tempId ? created : reply)),
                 }
               : comment,
           ),
         }));
-
-        setReplyInputs((prev) => ({ ...prev, [key]: "" }));
       } catch {
+        if (rollbackPost) {
+          setPosts((prev) => prev.map((post) => (post.id === postId ? rollbackPost! : post)));
+        }
+        setReplyInputs((prev) => ({ ...prev, [key]: content }));
         setFeedError("Unable to add reply right now.");
       } finally {
         setBusy(busyKey, false);
       }
     },
-    [ensurePostDetails, replyInputs, setBusy, updatePost],
+    [auth.user, replyInputs, setBusy, updatePost],
   );
 
   const totalPosts = useMemo(() => posts.length, [posts.length]);
