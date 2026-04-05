@@ -16,6 +16,8 @@ const loginSchema = z.object({
 
 const registerSchema = z
   .object({
+    firstName: z.string().trim().min(1, "First name is required"),
+    lastName: z.string().trim().min(1, "Last name is required"),
     email: z.string().trim().email(),
     password: z.string().min(1, "Password is required"),
     repeatPassword: z.string().min(1, "Repeat password is required"),
@@ -50,7 +52,7 @@ export function AuthShell({ mode }: AuthShellProps) {
 
   const registerForm = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
-    defaultValues: { email: "", password: "", repeatPassword: "" },
+    defaultValues: { firstName: "", lastName: "", email: "", password: "", repeatPassword: "" },
   });
 
   const handleLogin = loginForm.handleSubmit(async (values) => {
@@ -72,10 +74,9 @@ export function AuthShell({ mode }: AuthShellProps) {
     setSubmitError(null);
 
     try {
-      const emailPrefix = values.email.split("@")[0]?.trim() || "Buddy";
       await auth.register({
-        firstName: emailPrefix,
-        lastName: "User",
+        firstName: values.firstName,
+        lastName: values.lastName,
         email: values.email,
         password: values.password,
       });
@@ -195,6 +196,20 @@ export function AuthShell({ mode }: AuthShellProps) {
                 ) : (
                   <form className="_social_registration_form" onSubmit={handleRegister}>
                     <div className="row">
+                      <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                        <div className="_social_registration_form_input _mar_b14">
+                          <label className="_social_registration_label _mar_b8">First Name</label>
+                          <input type="text" className="form-control _social_registration_input" {...registerForm.register("firstName")} />
+                          {registerForm.formState.errors.firstName ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.firstName.message}</p> : null}
+                        </div>
+                      </div>
+                      <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+                        <div className="_social_registration_form_input _mar_b14">
+                          <label className="_social_registration_label _mar_b8">Last Name</label>
+                          <input type="text" className="form-control _social_registration_input" {...registerForm.register("lastName")} />
+                          {registerForm.formState.errors.lastName ? <p className="mt-2 text-sm text-rose-500">{registerForm.formState.errors.lastName.message}</p> : null}
+                        </div>
+                      </div>
                       <div className="col-xl-12 col-lg-12 col-md-12 col-sm-12">
                         <div className="_social_registration_form_input _mar_b14">
                           <label className="_social_registration_label _mar_b8">Email</label>

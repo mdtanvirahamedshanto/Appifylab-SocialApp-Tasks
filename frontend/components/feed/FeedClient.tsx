@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
 import HeaderNav from "./HeaderNav";
@@ -16,7 +16,26 @@ export default function FeedClient() {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [showNotify, setShowNotify] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showTimelineMenu, setShowTimelineMenu] = useState(false);
+
+  useEffect(() => {
+    if (!auth.isLoading && !auth.user) {
+      router.replace("/login");
+    }
+  }, [auth.isLoading, auth.user, router]);
+
+  if (auth.isLoading) {
+    return (
+      <div className="_layout _layout_main_wrapper">
+        <div className="container _custom_container _padd_t24">
+          <p>Loading feed...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!auth.user) {
+    return null;
+  }
 
   const first = auth.user?.firstName?.trim();
   const last = auth.user?.lastName?.trim();
@@ -59,10 +78,7 @@ export default function FeedClient() {
               </div>
 
               <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
-                <MiddleColumn
-                  showTimelineMenu={showTimelineMenu}
-                  onToggleTimeline={() => setShowTimelineMenu((prev) => !prev)}
-                />
+                <MiddleColumn />
               </div>
 
               <div className="col-xl-3 col-lg-3 col-md-12 col-sm-12">

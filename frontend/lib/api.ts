@@ -1,5 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./session";
+import type { ApiComment, ApiPost, ApiReply, ApiUser, FeedResponse, LikeType, PostVisibility } from "./types";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api";
 
@@ -87,5 +88,55 @@ export const api = {
   logout: async () => {
     await authClient.post("/auth/logout");
     clearAccessToken();
+  },
+  getFeed: async (cursor?: string | null, limit = 20) => {
+    const { data } = await apiClient.get<FeedResponse & { success: boolean }>("/feed", {
+      params: {
+        cursor: cursor ?? undefined,
+        limit,
+      },
+    });
+
+    return {
+      items: data.items,
+      nextCursor: data.nextCursor,
+      hasMore: data.hasMore,
+    };
+  },
+  getPost: async (postId: string) => {
+    const { data } = await apiClient.get<{ success: boolean; post: ApiPost }>(`/feed/posts/${postId}`);
+    return data.post;
+  },
+  createPost: async (payload: { content: string; imageUrl?: string | null; visibility: PostVisibility }) => {
+    const { data } = await apiClient.post<{ success: boolean; post: ApiPost }>("/feed/posts", payload);
+    return data.post;
+  },
+  addComment: async (postId: string, content: string) => {
+    const { data } = await apiClient.post<{ success: boolean; comment: ApiComment }>(`/feed/posts/${postId}/comments`, { content });
+    return data.comment;
+  },
+  addReply: async (commentId: string, content: string) => {
+    const { data } = await apiClient.post<{ success: boolean; reply: ApiReply }>(`/feed/comments/${commentId}/replies`, { content });
+    return data.reply;
+  },
+  toggleLike: async (type: LikeType, targetId: string) => {
+    const { data } = await apiClient.post<{ success: boolean; liked: boolean; likeCount: number; likedBy: ApiUser[]; viewerLiked: boolean }>(
+      "/feed/likes/toggle",
+      { type, targetId },
+    );
+
+    return data;
+  },
+  uploadImage: async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const { data } = await apiClient.post<{ success: boolean; imageUrl: string; publicId: string }>("/uploads/image", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+
+    return data;
   },
 };
