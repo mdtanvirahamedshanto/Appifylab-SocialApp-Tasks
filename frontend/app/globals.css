@@ -137,6 +137,14 @@ select {
   border-radius: 999px;
 }
 
+._comment_reply_list {
+  white-space: nowrap;
+}
+
+._comment_reply_list ._time_link {
+  white-space: nowrap;
+}
+
 @media (min-width: 992px) {
   ._header_nav .collapse.navbar-collapse {
     display: flex !important;

@@ -202,7 +202,7 @@ function FeedPostCard({
                     </a>
                   </div>
 
-                  <div className="_comment_area" style={{ width: "100%" }}>
+                  <div className="_comment_area">
                     <div className="_comment_details">
                       <div className="_comment_details_top">
                         <div className="_comment_name">
