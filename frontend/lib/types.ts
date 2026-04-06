@@ -53,6 +53,13 @@ export interface FeedResponse {
   hasMore: boolean;
 }
 
+export interface PostCommentsResponse {
+  items: ApiComment[];
+  nextCursor: string | null;
+  hasMore: boolean;
+  totalCount: number;
+}
+
 export interface AuthResponse {
   success: boolean;
   message: string;

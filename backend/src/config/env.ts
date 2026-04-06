@@ -14,6 +14,8 @@ const envSchema = z.object({
   CLOUDINARY_FOLDER: z.string().default("appifylab"),
   MAX_AUTH_REQUESTS_PER_WINDOW: z.coerce.number().int().positive().default(10),
   AUTH_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(15 * 60 * 1000),
+  MAX_FEED_WRITE_REQUESTS_PER_WINDOW: z.coerce.number().int().positive().default(300),
+  FEED_WRITE_RATE_LIMIT_WINDOW_MS: z.coerce.number().int().positive().default(60 * 1000),
 });
 
 export const env = envSchema.parse(process.env);

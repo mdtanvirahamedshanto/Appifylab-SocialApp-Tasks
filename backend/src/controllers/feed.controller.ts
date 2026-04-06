@@ -7,6 +7,7 @@ import {
   createPost,
   getFeed,
   getPostById,
+  getPostComments,
   toggleLike,
   LikeTypeValues,
   PostVisibilityValues,
@@ -15,6 +16,12 @@ import {
 const feedQuerySchema = z.object({
   cursor: z.string().optional().nullable(),
   limit: z.coerce.number().int().positive().max(50).optional(),
+});
+
+const commentsQuerySchema = z.object({
+  cursor: z.string().optional().nullable(),
+  limit: z.coerce.number().int().positive().max(50).optional(),
+  repliesLimit: z.coerce.number().int().positive().max(20).optional(),
 });
 
 const createPostSchema = z.object({
@@ -83,6 +90,31 @@ export const getPostController = asyncHandler(async (req: Request, res: Response
   const post = await getPostById(postId, req.authUser.id);
 
   res.status(200).json({ success: true, post });
+});
+
+export const getPostCommentsController = asyncHandler(async (req: Request, res: Response) => {
+  if (!req.authUser) {
+    res.status(401).json({ success: false, message: "Unauthorized" });
+    return;
+  }
+
+  const postId = z.string().min(1).parse(req.params.postId);
+  const parsed = commentsQuerySchema.safeParse(req.query);
+
+  if (!parsed.success) {
+    res.status(400).json({ success: false, message: "Validation failed", details: parsed.error.flatten() });
+    return;
+  }
+
+  const data = await getPostComments({
+    postId,
+    viewerId: req.authUser.id,
+    cursor: parsed.data.cursor,
+    limit: parsed.data.limit,
+    repliesLimit: parsed.data.repliesLimit,
+  });
+
+  res.status(200).json({ success: true, ...data });
 });
 
 export const addCommentController = asyncHandler(async (req: Request, res: Response) => {

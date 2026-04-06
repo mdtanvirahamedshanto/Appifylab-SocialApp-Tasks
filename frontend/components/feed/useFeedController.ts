@@ -24,6 +24,8 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
 
   const [expandedPosts, setExpandedPosts] = useState<Record<string, boolean>>({});
   const [showAllComments, setShowAllComments] = useState<Record<string, boolean>>({});
+  const [commentsCursorByPost, setCommentsCursorByPost] = useState<Record<string, string | null>>({});
+  const [commentsHasMoreByPost, setCommentsHasMoreByPost] = useState<Record<string, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
   const [openReplyBoxes, setOpenReplyBoxes] = useState<Record<string, boolean>>({});
@@ -66,10 +68,33 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     };
   }, [loadFeed]);
 
+  const loadCommentsPage = useCallback(async (postId: string, cursor?: string | null, replace = false) => {
+    const result = await api.getPostComments(postId, cursor ?? null, 20, 5);
+
+    setPosts((prev) =>
+      prev.map((post) => {
+        if (post.id !== postId) return post;
+
+        const currentComments = post.comments ?? [];
+        const nextComments = replace ? result.items : [...currentComments, ...result.items];
+        const deduped = Array.from(new Map(nextComments.map((comment) => [comment.id, comment])).values());
+
+        return {
+          ...post,
+          commentCount: result.totalCount,
+          comments: deduped,
+        };
+      }),
+    );
+
+    setCommentsCursorByPost((prev) => ({ ...prev, [postId]: result.nextCursor }));
+    setCommentsHasMoreByPost((prev) => ({ ...prev, [postId]: result.hasMore }));
+  }, []);
+
   const ensurePostDetails = useCallback(
     async (postId: string) => {
       const existing = posts.find((post) => post.id === postId);
-      if (existing?.comments) return;
+      if (existing?.comments !== undefined) return;
 
       const inflight = detailsRequestCacheRef.current.get(postId);
       if (inflight) {
@@ -77,10 +102,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
         return;
       }
 
-      const request = (async () => {
-        const detail = await api.getPost(postId);
-        setPosts((prev) => prev.map((post) => (post.id === postId ? detail : post)));
-      })();
+      const request = loadCommentsPage(postId, null, true);
 
       detailsRequestCacheRef.current.set(postId, request);
 
@@ -90,7 +112,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
         detailsRequestCacheRef.current.delete(postId);
       }
     },
-    [posts],
+    [loadCommentsPage, posts],
   );
 
   useEffect(() => {
@@ -493,9 +515,33 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     setReplyInputs((prev) => ({ ...prev, [`${postId}:${commentId}`]: value }));
   }, []);
 
-  const showAllCommentsForPost = useCallback((postId: string) => {
-    setShowAllComments((prev) => ({ ...prev, [postId]: true }));
-  }, []);
+  const handleLoadMoreComments = useCallback(
+    async (postId: string) => {
+      const busyKey = `comments:${postId}`;
+      if (actionBusy[busyKey] || !commentsHasMoreByPost[postId]) return;
+
+      setBusy(busyKey, true);
+      try {
+        await loadCommentsPage(postId, commentsCursorByPost[postId] ?? null, false);
+      } catch {
+        setFeedError("Unable to load comments.");
+      } finally {
+        setBusy(busyKey, false);
+      }
+    },
+    [actionBusy, commentsCursorByPost, commentsHasMoreByPost, loadCommentsPage, setBusy],
+  );
+
+  const showAllCommentsForPost = useCallback(
+    (postId: string) => {
+      setShowAllComments((prev) => ({ ...prev, [postId]: true }));
+
+      if (commentsHasMoreByPost[postId] && !actionBusy[`comments:${postId}`]) {
+        void handleLoadMoreComments(postId);
+      }
+    },
+    [actionBusy, commentsHasMoreByPost, handleLoadMoreComments],
+  );
 
   const toggleReplyBox = useCallback((postId: string, commentId: string) => {
     const key = `${postId}:${commentId}`;
@@ -546,6 +592,8 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     composerError,
     expandedPosts,
     showAllComments,
+    commentsCursorByPost,
+    commentsHasMoreByPost,
     commentInputs,
     replyInputs,
     openReplyBoxes,
@@ -565,6 +613,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     handleToggleLike,
     handleAddComment,
     handleAddReply,
+    handleLoadMoreComments,
     handleLoadMore,
   };
 }

@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./session";
-import type { ApiComment, ApiPost, ApiReply, ApiUser, FeedResponse, LikeType, PostVisibility } from "./types";
+import type { ApiComment, ApiPost, ApiReply, ApiUser, FeedResponse, LikeType, PostCommentsResponse, PostVisibility } from "./types";
 
 const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api";
 
@@ -106,6 +106,22 @@ export const api = {
   getPost: async (postId: string) => {
     const { data } = await apiClient.get<{ success: boolean; post: ApiPost }>(`/feed/posts/${postId}`);
     return data.post;
+  },
+  getPostComments: async (postId: string, cursor?: string | null, limit = 20, repliesLimit = 5) => {
+    const { data } = await apiClient.get<PostCommentsResponse & { success: boolean }>(`/feed/posts/${postId}/comments`, {
+      params: {
+        cursor: cursor ?? undefined,
+        limit,
+        repliesLimit,
+      },
+    });
+
+    return {
+      items: data.items,
+      nextCursor: data.nextCursor,
+      hasMore: data.hasMore,
+      totalCount: data.totalCount,
+    };
   },
   createPost: async (payload: { content: string; imageUrl?: string | null; visibility: PostVisibility }) => {
     const { data } = await apiClient.post<{ success: boolean; post: ApiPost }>("/feed/posts", payload);

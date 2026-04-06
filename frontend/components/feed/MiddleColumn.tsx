@@ -37,6 +37,7 @@ export default function MiddleColumn() {
             post={post}
             expanded={!!feed.expandedPosts[post.id]}
             commentsLoading={!!feed.actionBusy[`comments:${post.id}`]}
+            commentsHasMore={!!feed.commentsHasMoreByPost[post.id]}
             showAllComments={!!feed.showAllComments[post.id]}
             commentInput={feed.commentInputs[post.id] ?? ""}
             replyInputs={feed.replyInputs}
@@ -52,6 +53,7 @@ export default function MiddleColumn() {
             onReplyInputChange={feed.setReplyInput}
             onAddReply={feed.handleAddReply}
             onShowAllComments={feed.showAllCommentsForPost}
+            onLoadMoreComments={feed.handleLoadMoreComments}
             onToggleReplyBox={feed.toggleReplyBox}
           />
         ))}

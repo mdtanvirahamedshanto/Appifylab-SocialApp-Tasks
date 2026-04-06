@@ -6,6 +6,7 @@ interface FeedPostCardProps {
   post: ApiPost;
   expanded: boolean;
   commentsLoading: boolean;
+  commentsHasMore: boolean;
   showAllComments: boolean;
   commentInput: string;
   replyInputs: Record<string, string>;
@@ -21,6 +22,7 @@ interface FeedPostCardProps {
   onReplyInputChange: (postId: string, commentId: string, value: string) => void;
   onAddReply: (postId: string, commentId: string) => void | Promise<void>;
   onShowAllComments: (postId: string) => void;
+  onLoadMoreComments: (postId: string) => void | Promise<void>;
   onToggleReplyBox: (postId: string, commentId: string) => void;
 }
 
@@ -28,6 +30,7 @@ function FeedPostCard({
   post,
   expanded,
   commentsLoading,
+  commentsHasMore,
   showAllComments,
   commentInput,
   replyInputs,
@@ -43,6 +46,7 @@ function FeedPostCard({
   onReplyInputChange,
   onAddReply,
   onShowAllComments,
+  onLoadMoreComments,
   onToggleReplyBox,
 }: FeedPostCardProps) {
   const handleTextareaSubmitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
@@ -54,7 +58,8 @@ function FeedPostCard({
 
   const allComments = post.comments ?? [];
   const visibleComments = showAllComments ? allComments : allComments.slice(0, 2);
-  const hiddenCount = Math.max(0, allComments.length - visibleComments.length);
+  const totalComments = post.commentCount ?? allComments.length;
+  const hiddenCount = Math.max(0, totalComments - visibleComments.length);
 
   return (
     <div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16">
@@ -212,10 +217,25 @@ function FeedPostCard({
               </>
             ) : null}
 
-            {hiddenCount > 0 ? (
+            {hiddenCount > 0 && !showAllComments ? (
               <div className="_previous_comment">
                 <button type="button" className="_previous_comment_txt" onClick={() => onShowAllComments(post.id)}>
                   View {hiddenCount} previous comments
+                </button>
+              </div>
+            ) : null}
+
+            {showAllComments && commentsHasMore ? (
+              <div className="_previous_comment">
+                <button
+                  type="button"
+                  className="_previous_comment_txt"
+                  disabled={commentsLoading}
+                  onClick={() => {
+                    void onLoadMoreComments(post.id);
+                  }}
+                >
+                  {commentsLoading ? "Loading comments..." : "Load more comments"}
                 </button>
               </div>
             ) : null}
@@ -463,6 +483,7 @@ export default memo(FeedPostCard, (prev, next) => {
   if (prev.post !== next.post) return false;
   if (prev.expanded !== next.expanded) return false;
   if (prev.commentsLoading !== next.commentsLoading) return false;
+  if (prev.commentsHasMore !== next.commentsHasMore) return false;
   if (prev.showAllComments !== next.showAllComments) return false;
   if (prev.commentInput !== next.commentInput) return false;
   if (prev.shareCount !== next.shareCount) return false;
