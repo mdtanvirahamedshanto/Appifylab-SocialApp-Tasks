@@ -5,6 +5,7 @@ import { formatRelative, isTempEntityId, likedByText, toName } from "./feed-util
 interface FeedPostCardProps {
   post: ApiPost;
   expanded: boolean;
+  commentsLoading: boolean;
   showAllComments: boolean;
   commentInput: string;
   replyInputs: Record<string, string>;
@@ -26,6 +27,7 @@ interface FeedPostCardProps {
 function FeedPostCard({
   post,
   expanded,
+  commentsLoading,
   showAllComments,
   commentInput,
   replyInputs,
@@ -173,10 +175,35 @@ function FeedPostCard({
                   </button>
                 </div>
               </form>
+              {actionBusy[`comment:${post.id}`] ? (
+                <div className="_mar_t8" aria-live="polite">
+                  <small className="text-xs opacity-70">Sending comment...</small>
+                </div>
+              ) : null}
             </div>
           </div>
 
           <div className="_timline_comment_main _padd_r24 _padd_l24">
+            {commentsLoading && allComments.length === 0 ? (
+              <>
+                <div className="feed-skeleton-row _mar_b16">
+                  <div className="feed-skeleton feed-skeleton-avatar" />
+                  <div className="feed-skeleton-stack" style={{ maxWidth: "360px" }}>
+                    <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+                    <div className="feed-skeleton feed-skeleton-line" style={{ width: "88%" }} />
+                    <div className="feed-skeleton feed-skeleton-line" style={{ width: "56%", marginBottom: 0 }} />
+                  </div>
+                </div>
+                <div className="feed-skeleton-row _mar_b16">
+                  <div className="feed-skeleton feed-skeleton-avatar" />
+                  <div className="feed-skeleton-stack" style={{ maxWidth: "330px" }}>
+                    <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+                    <div className="feed-skeleton feed-skeleton-line" style={{ width: "74%", marginBottom: 0 }} />
+                  </div>
+                </div>
+              </>
+            ) : null}
+
             {hiddenCount > 0 ? (
               <div className="_previous_comment">
                 <button type="button" className="_previous_comment_txt" onClick={() => onShowAllComments(post.id)}>
@@ -309,6 +336,11 @@ function FeedPostCard({
                             </button>
                           </div>
                         </form>
+                        {actionBusy[`reply:${post.id}:${comment.id}`] ? (
+                          <div className="_mar_t8" aria-live="polite">
+                            <small className="text-xs opacity-70">Sending reply...</small>
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
 
@@ -421,6 +453,7 @@ const equalReplyInputsForPost = (prev: Record<string, string>, next: Record<stri
 export default memo(FeedPostCard, (prev, next) => {
   if (prev.post !== next.post) return false;
   if (prev.expanded !== next.expanded) return false;
+  if (prev.commentsLoading !== next.commentsLoading) return false;
   if (prev.showAllComments !== next.showAllComments) return false;
   if (prev.commentInput !== next.commentInput) return false;
   if (prev.shareCount !== next.shareCount) return false;

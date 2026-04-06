@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "../../lib/api";
 import type { ApiComment, ApiPost, ApiUser, LikeType, PostVisibility } from "../../lib/types";
 
@@ -7,6 +7,9 @@ interface UseFeedControllerOptions {
 }
 
 export function useFeedController({ user }: UseFeedControllerOptions) {
+  const detailsRequestCacheRef = useRef<Map<string, Promise<void>>>(new Map());
+  const preloadedPostIdsRef = useRef<Set<string>>(new Set());
+
   const [posts, setPosts] = useState<ApiPost[]>([]);
   const [feedLoading, setFeedLoading] = useState(true);
   const [feedError, setFeedError] = useState<string | null>(null);
@@ -68,11 +71,41 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
       const existing = posts.find((post) => post.id === postId);
       if (existing?.comments) return;
 
-      const detail = await api.getPost(postId);
-      setPosts((prev) => prev.map((post) => (post.id === postId ? detail : post)));
+      const inflight = detailsRequestCacheRef.current.get(postId);
+      if (inflight) {
+        await inflight;
+        return;
+      }
+
+      const request = (async () => {
+        const detail = await api.getPost(postId);
+        setPosts((prev) => prev.map((post) => (post.id === postId ? detail : post)));
+      })();
+
+      detailsRequestCacheRef.current.set(postId, request);
+
+      try {
+        await request;
+      } finally {
+        detailsRequestCacheRef.current.delete(postId);
+      }
     },
     [posts],
   );
+
+  useEffect(() => {
+    if (feedLoading || posts.length === 0) return;
+
+    const candidates = posts.filter((post) => !post.comments).slice(0, 2);
+
+    for (const post of candidates) {
+      if (preloadedPostIdsRef.current.has(post.id)) continue;
+      preloadedPostIdsRef.current.add(post.id);
+      void ensurePostDetails(post.id).catch(() => {
+        // Ignore prefetch failures; explicit expand will retry.
+      });
+    }
+  }, [ensurePostDetails, feedLoading, posts]);
 
   const handleCreatePost = useCallback(async () => {
     if (composerBusy) return;

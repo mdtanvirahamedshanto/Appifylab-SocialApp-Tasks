@@ -36,6 +36,7 @@ export default function MiddleColumn() {
             key={post.id}
             post={post}
             expanded={!!feed.expandedPosts[post.id]}
+            commentsLoading={!!feed.actionBusy[`comments:${post.id}`]}
             showAllComments={!!feed.showAllComments[post.id]}
             commentInput={feed.commentInputs[post.id] ?? ""}
             replyInputs={feed.replyInputs}
