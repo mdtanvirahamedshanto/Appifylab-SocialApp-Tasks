@@ -565,6 +565,35 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     });
   }, []);
 
+  const startReplyToComment = useCallback((postId: string, commentId: string, mentionName?: string) => {
+    const key = `${postId}:${commentId}`;
+
+    setOpenReplyBoxes((prev) => ({
+      ...prev,
+      [key]: true,
+    }));
+
+    setReplyInputs((prev) => {
+      const mentionPrefix = mentionName ? `@${mentionName} ` : "";
+      const current = prev[key] ?? "";
+
+      if (!Object.prototype.hasOwnProperty.call(prev, key)) {
+        return { ...prev, [key]: mentionPrefix };
+      }
+
+      if (!mentionPrefix) return prev;
+
+      if (current.startsWith(mentionPrefix)) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [key]: mentionPrefix,
+      };
+    });
+  }, []);
+
   const handleLoadMore = useCallback(async () => {
     setBusy("loadMore", true);
     try {
@@ -607,6 +636,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     setReplyInput,
     showAllCommentsForPost,
     toggleReplyBox,
+    startReplyToComment,
     handleCreatePost,
     handleToggleComments,
     handleSharePost,

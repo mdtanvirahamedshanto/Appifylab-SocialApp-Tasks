@@ -55,6 +55,7 @@ export default function MiddleColumn() {
             onShowAllComments={feed.showAllCommentsForPost}
             onLoadMoreComments={feed.handleLoadMoreComments}
             onToggleReplyBox={feed.toggleReplyBox}
+            onStartReplyToComment={feed.startReplyToComment}
           />
         ))}
 
