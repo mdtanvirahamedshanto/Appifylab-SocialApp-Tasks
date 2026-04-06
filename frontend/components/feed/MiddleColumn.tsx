@@ -1,7 +1,7 @@
 "use client";
 
 import { useAuth } from "../providers";
-import FeedPostCard from "./FeedPostCard";
+import FeedPostCard from "./FeedPostItem";
 import MiddleFeedLoadingSkeleton from "./MiddleFeedLoadingSkeleton";
 import PostComposer from "./PostComposer";
 import StoriesSection from "./StoriesSection";
@@ -39,6 +39,7 @@ export default function MiddleColumn() {
             showAllComments={!!feed.showAllComments[post.id]}
             commentInput={feed.commentInputs[post.id] ?? ""}
             replyInputs={feed.replyInputs}
+            openReplyBoxes={feed.openReplyBoxes}
             actionBusy={feed.actionBusy}
             shareCount={feed.shareCountByPost[post.id] ?? 0}
             shareStatus={feed.shareStatusByPost[post.id] ?? ""}
@@ -50,7 +51,7 @@ export default function MiddleColumn() {
             onReplyInputChange={feed.setReplyInput}
             onAddReply={feed.handleAddReply}
             onShowAllComments={feed.showAllCommentsForPost}
-            onPrepareReply={feed.prepareReplyInput}
+            onToggleReplyBox={feed.toggleReplyBox}
           />
         ))}
 

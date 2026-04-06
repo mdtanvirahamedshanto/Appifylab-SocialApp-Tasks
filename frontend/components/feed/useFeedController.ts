@@ -23,6 +23,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
   const [showAllComments, setShowAllComments] = useState<Record<string, boolean>>({});
   const [commentInputs, setCommentInputs] = useState<Record<string, string>>({});
   const [replyInputs, setReplyInputs] = useState<Record<string, string>>({});
+  const [openReplyBoxes, setOpenReplyBoxes] = useState<Record<string, boolean>>({});
   const [actionBusy, setActionBusy] = useState<Record<string, boolean>>({});
   const [shareCountByPost, setShareCountByPost] = useState<Record<string, number>>({});
   const [shareStatusByPost, setShareStatusByPost] = useState<Record<string, string>>({});
@@ -463,14 +464,27 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     setShowAllComments((prev) => ({ ...prev, [postId]: true }));
   }, []);
 
-  const prepareReplyInput = useCallback(
-    (postId: string, commentId: string) => {
-      const key = `${postId}:${commentId}`;
-      const current = replyInputs[key] ?? "";
-      setReplyInputs((prev) => ({ ...prev, [key]: current }));
-    },
-    [replyInputs],
-  );
+  const toggleReplyBox = useCallback((postId: string, commentId: string) => {
+    const key = `${postId}:${commentId}`;
+    setOpenReplyBoxes((prev) => {
+      const nextOpen = !prev[key];
+
+      if (nextOpen) {
+        setReplyInputs((prevInputs) => {
+          if (Object.prototype.hasOwnProperty.call(prevInputs, key)) {
+            return prevInputs;
+          }
+
+          return { ...prevInputs, [key]: "" };
+        });
+      }
+
+      return {
+        ...prev,
+        [key]: nextOpen,
+      };
+    });
+  }, []);
 
   const handleLoadMore = useCallback(async () => {
     setBusy("loadMore", true);
@@ -501,6 +515,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     showAllComments,
     commentInputs,
     replyInputs,
+    openReplyBoxes,
     actionBusy,
     shareCountByPost,
     shareStatusByPost,
@@ -510,7 +525,7 @@ export function useFeedController({ user }: UseFeedControllerOptions) {
     setCommentInput,
     setReplyInput,
     showAllCommentsForPost,
-    prepareReplyInput,
+    toggleReplyBox,
     handleCreatePost,
     handleToggleComments,
     handleSharePost,
