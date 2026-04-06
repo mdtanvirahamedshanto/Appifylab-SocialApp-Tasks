@@ -377,73 +377,78 @@ function FeedPostCard({
                       </div>
                     ) : null}
 
-                    {comment.replies.map((reply) => (
-                      <div className="_comment_main _mar_t16 _mar_l16" key={reply.id}>
-                        {isTempEntityId(reply.id) ? (
-                          <div className="feed-skeleton-row _mar_b8" aria-label="Loading reply">
+                    {comment.replies.map((reply) => {
+                      if (isTempEntityId(reply.id)) {
+                        return (
+                          <div className="feed-skeleton-row _mar_t16 _mar_l16" key={reply.id} aria-label="Loading reply">
                             <div className="feed-skeleton feed-skeleton-avatar" />
                             <div className="feed-skeleton-stack" style={{ maxWidth: "280px" }}>
                               <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
                               <div className="feed-skeleton feed-skeleton-line" style={{ width: "78%", marginBottom: 0 }} />
                             </div>
                           </div>
-                        ) : null}
-                        <div className="_comment_image">
-                          <a href="#0" className="_comment_image_link">
-                            <img src="/buddy-script/assets/images/txt_img.png" alt="Image" className="_comment_img1" />
-                          </a>
-                        </div>
-                        <div className="_comment_area">
-                          <div className="_comment_details">
-                            <div className="_comment_details_top">
-                              <div className="_comment_name">
-                                <a href="#0">
-                                  <h4 className="_comment_name_title">{toName(reply.author)}</h4>
-                                </a>
+                        );
+                      }
+
+                      return (
+                        <div className="_comment_main _mar_t16 _mar_l16" key={reply.id}>
+                          <div className="_comment_image">
+                            <a href="#0" className="_comment_image_link">
+                              <img src="/buddy-script/assets/images/txt_img.png" alt="Image" className="_comment_img1" />
+                            </a>
+                          </div>
+                          <div className="_comment_area">
+                            <div className="_comment_details">
+                              <div className="_comment_details_top">
+                                <div className="_comment_name">
+                                  <a href="#0">
+                                    <h4 className="_comment_name_title">{toName(reply.author)}</h4>
+                                  </a>
+                                </div>
                               </div>
-                            </div>
-                            <div className="_comment_status">
-                              <p className="_comment_status_text">
-                                <span>{reply.content}</span>
-                              </p>
-                            </div>
-                            <div className="_total_reactions">
-                              <div className="_total_react">
-                                <span className="_reaction_like">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
-                                  </svg>
-                                </span>
-                                <span className="_reaction_heart">
-                                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
-                                  </svg>
-                                </span>
+                              <div className="_comment_status">
+                                <p className="_comment_status_text">
+                                  <span>{reply.content}</span>
+                                </p>
                               </div>
-                              <span className="_total">{reply.likeCount}</span>
-                            </div>
-                            <div className="_comment_reply">
-                              <div className="_comment_reply_num">
-                                <ul className="_comment_reply_list">
-                                  <li>
-                                    <span>{reply.viewerLiked ? "Unlike." : "Like."}</span>
-                                  </li>
-                                  <li>
-                                    <span>Reply.</span>
-                                  </li>
-                                  <li>
-                                    <span>Share</span>
-                                  </li>
-                                  <li>
-                                    <span className="_time_link">.{formatRelative(reply.createdAt)}</span>
-                                  </li>
-                                </ul>
+                              <div className="_total_reactions">
+                                <div className="_total_react">
+                                  <span className="_reaction_like">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
+                                    </svg>
+                                  </span>
+                                  <span className="_reaction_heart">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
+                                    </svg>
+                                  </span>
+                                </div>
+                                <span className="_total">{reply.likeCount}</span>
+                              </div>
+                              <div className="_comment_reply">
+                                <div className="_comment_reply_num">
+                                  <ul className="_comment_reply_list">
+                                    <li>
+                                      <span>{reply.viewerLiked ? "Unlike." : "Like."}</span>
+                                    </li>
+                                    <li>
+                                      <span>Reply.</span>
+                                    </li>
+                                    <li>
+                                      <span>Share</span>
+                                    </li>
+                                    <li>
+                                      <span className="_time_link">.{formatRelative(reply.createdAt)}</span>
+                                    </li>
+                                  </ul>
+                                </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 </div>
               );
