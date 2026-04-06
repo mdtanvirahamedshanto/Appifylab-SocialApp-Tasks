@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, type KeyboardEvent } from "react";
 import type { ApiComment, ApiPost, LikeType } from "../../lib/types";
 import { formatRelative, isTempEntityId, likedByText, toName } from "./feed-utils";
 
@@ -45,6 +45,13 @@ function FeedPostCard({
   onShowAllComments,
   onToggleReplyBox,
 }: FeedPostCardProps) {
+  const handleTextareaSubmitOnEnter = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (event.key === "Enter" && !event.shiftKey) {
+      event.preventDefault();
+      event.currentTarget.form?.requestSubmit();
+    }
+  };
+
   const allComments = post.comments ?? [];
   const visibleComments = showAllComments ? allComments : allComments.slice(0, 2);
   const hiddenCount = Math.max(0, allComments.length - visibleComments.length);
@@ -158,6 +165,7 @@ function FeedPostCard({
                       className="form-control _comment_textarea"
                       placeholder="Write a comment"
                       value={commentInput}
+                      onKeyDown={handleTextareaSubmitOnEnter}
                       onChange={(event) => onCommentInputChange(post.id, event.target.value)}
                     />
                   </div>
@@ -165,7 +173,7 @@ function FeedPostCard({
                 <div className="_feed_inner_comment_box_icon">
                   <button type="submit" className="_feed_inner_comment_box_icon_btn" disabled={!!actionBusy[`comment:${post.id}`]} aria-label="Add comment">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
-                      <path fill="#000" fillOpacity=".46" fillRule="evenodd" d="M13.167 6.534a.5.5 0 01.5.5c0 3.061-2.35 5.582-5.333 5.837V14.5a.5.5 0 01-1 0v-1.629C4.35 12.616 2 10.096 2 7.034a.5.5 0 011 0c0 2.679 2.168 4.859 4.833 4.859 2.666 0 4.834-2.18 4.834-4.86a.5.5 0 01.5-.5zM7.833.667a3.218 3.218 0 013.208 3.22v3.126c0 1.775-1.439 3.22-3.208 3.22a3.218 3.218 0 01-3.208-3.22V3.887c0-1.776 1.44-3.22 3.208-3.22zm0 1a2.217 2.217 0 00-2.208 2.22v3.126c0 1.223.991 2.22 2.208 2.22a2.217 2.217 0 002.208-2.22V3.887c0-1.224-.99-2.22-2.208-2.22z" clipRule="evenodd" />
+                      <path fill="#000" fillOpacity=".56" d="M14.74 1.26a.75.75 0 0 0-.78-.18l-12 4.5a.75.75 0 0 0 .04 1.42l4.4 1.38 1.38 4.4a.75.75 0 0 0 1.42.04l4.5-12a.75.75 0 0 0-.18-.78l-.78.78-.01.01-4.33 8.66-1.01-3.21a.75.75 0 0 0-.48-.48L3.2 6.81l8.66-4.33.01-.01.87-.21z" />
                     </svg>
                   </button>
                   <button type="button" className="_feed_inner_comment_box_icon_btn" aria-label="Comment image option">
@@ -314,6 +322,7 @@ function FeedPostCard({
                                 className="form-control _comment_textarea"
                                 placeholder="Write a comment"
                                 value={replyInputs[replyKey] ?? ""}
+                                onKeyDown={handleTextareaSubmitOnEnter}
                                 onChange={(event) => onReplyInputChange(post.id, comment.id, event.target.value)}
                               />
                             </div>
@@ -326,7 +335,7 @@ function FeedPostCard({
                               aria-label="Add reply"
                             >
                               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 16 16">
-                                <path fill="#000" fillOpacity=".46" fillRule="evenodd" d="M13.167 6.534a.5.5 0 01.5.5c0 3.061-2.35 5.582-5.333 5.837V14.5a.5.5 0 01-1 0v-1.629C4.35 12.616 2 10.096 2 7.034a.5.5 0 011 0c0 2.679 2.168 4.859 4.833 4.859 2.666 0 4.834-2.18 4.834-4.86a.5.5 0 01.5-.5zM7.833.667a3.218 3.218 0 013.208 3.22v3.126c0 1.775-1.439 3.22-3.208 3.22a3.218 3.218 0 01-3.208-3.22V3.887c0-1.776 1.44-3.22 3.208-3.22zm0 1a2.217 2.217 0 00-2.208 2.22v3.126c0 1.223.991 2.22 2.208 2.22a2.217 2.217 0 002.208-2.22V3.887c0-1.224-.99-2.22-2.208-2.22z" clipRule="evenodd" />
+                                <path fill="#000" fillOpacity=".56" d="M14.74 1.26a.75.75 0 0 0-.78-.18l-12 4.5a.75.75 0 0 0 .04 1.42l4.4 1.38 1.38 4.4a.75.75 0 0 0 1.42.04l4.5-12a.75.75 0 0 0-.18-.78l-.78.78-.01.01-4.33 8.66-1.01-3.21a.75.75 0 0 0-.48-.48L3.2 6.81l8.66-4.33.01-.01.87-.21z" />
                               </svg>
                             </button>
                             <button type="button" className="_feed_inner_comment_box_icon_btn" aria-label="Reply image option">
