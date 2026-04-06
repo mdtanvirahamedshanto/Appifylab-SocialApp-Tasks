@@ -35,6 +35,87 @@ The UI implementation follows the provided login, registration, and feed referen
 - `Selection Task for Full Stack Engineer at Appifylab/`: original static HTML/CSS design reference.
 - `docker-compose.yml`: containerized local stack (frontend, backend, postgres).
 
+## Frontend Feed Architecture (Who Uses What)
+
+This section explains which file is responsible for which part of the feed page after refactoring for production maintainability.
+
+### High-Level Flow
+
+1. `frontend/components/feed/FeedClient.tsx`
+	- Entry for protected feed screen.
+	- Handles auth gate and redirects unauthenticated users to `/login`.
+	- Shows full-page skeleton while auth context is loading.
+	- Composes page shell (`HeaderNav`, `MobileNav`, sidebars, `MiddleColumn`).
+
+2. `frontend/components/feed/MiddleColumn.tsx`
+	- Thin orchestration component (UI composition only).
+	- Consumes `useFeedController` for all async/state/action logic.
+	- Renders:
+	  - `StoriesSection`
+	  - `PostComposer`
+	  - `MiddleFeedLoadingSkeleton` (when feed API is loading)
+	  - mapped `FeedPostCard` list
+
+3. `frontend/components/feed/useFeedController.ts`
+	- Single source of truth for feed behavior.
+	- Owns async API operations and complex optimistic updates:
+	  - initial feed load
+	  - load more (cursor-based pagination)
+	  - create post + optional image upload
+	  - load post details/comments on demand
+	  - like/unlike for post/comment/reply
+	  - add comment
+	  - add reply
+	  - share/link copy behavior
+	- Owns UI state maps:
+	  - `expandedPosts`
+	  - `showAllComments`
+	  - `commentInputs`
+	  - `replyInputs`
+	  - `actionBusy`
+	  - `shareCountByPost`
+	  - `shareStatusByPost`
+
+4. `frontend/components/feed/FeedPostCard.tsx`
+	- Renders one post timeline card with comments/replies/actions.
+	- Receives state/actions from `useFeedController` through props.
+	- Encapsulates post-level rendering and interaction markup.
+
+5. `frontend/components/feed/PostComposer.tsx`
+	- Renders the create-post UI only.
+	- Controlled by props (`composerContent`, visibility, file, busy, errors).
+
+6. `frontend/components/feed/StoriesSection.tsx`
+	- Story card block separated as a static presentational component.
+
+7. `frontend/components/feed/MiddleFeedLoadingSkeleton.tsx`
+	- Skeleton UI for the feed list loading phase.
+
+8. `frontend/components/feed/feed-utils.ts`
+	- Pure utility helpers:
+	  - relative date formatting
+	  - display name formatting
+	  - likes summary text
+	  - temp-entity id detection
+
+### Performance Strategy
+
+- `React.memo` is applied to heavy presentational components:
+  - `FeedPostCard`
+  - `PostComposer`
+  - `StoriesSection`
+  - `MiddleFeedLoadingSkeleton`
+
+- `FeedPostCard` has a custom memo comparator that checks post-scoped busy and reply-input keys to prevent unnecessary rerenders from unrelated list items.
+
+- Async handlers in `useFeedController` are wrapped with `useCallback` so child props remain stable across renders.
+
+### Loading/Skeleton Behavior
+
+- Auth-level loading skeleton (full page): `FeedClient.tsx`
+- Feed data loading skeleton (middle column): `MiddleFeedLoadingSkeleton.tsx` rendered from `MiddleColumn.tsx`
+- No artificial loading delay is used; skeletons appear only during real loading states.
+
 ## API Surface
 
 Base path: `/api`
