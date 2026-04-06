@@ -340,21 +340,21 @@ export const addComment = async (input: {
   authorId: string;
   content: string;
 }) => {
-  const comment = await prisma.$transaction(async (tx) => {
-    const post = await tx.post.findUnique({
-      where: { id: input.postId },
-      select: { id: true, visibility: true, authorId: true },
-    });
+  const post = await prisma.post.findUnique({
+    where: { id: input.postId },
+    select: { id: true, visibility: true, authorId: true },
+  });
 
-    if (!post) {
-      throw new AppError(404, "Post not found");
-    }
+  if (!post) {
+    throw new AppError(404, "Post not found");
+  }
 
-    if (post.visibility === PostVisibilityValues.PRIVATE && post.authorId !== input.authorId) {
-      throw new AppError(403, "Forbidden");
-    }
+  if (post.visibility === PostVisibilityValues.PRIVATE && post.authorId !== input.authorId) {
+    throw new AppError(403, "Forbidden");
+  }
 
-    const createdComment = await tx.comment.create({
+  const [comment] = await prisma.$transaction([
+    prisma.comment.create({
       data: {
         postId: input.postId,
         authorId: input.authorId,
@@ -369,15 +369,13 @@ export const addComment = async (input: {
         updatedAt: true,
         author: { select: userSelect },
       },
-    });
-
-    await tx.post.update({
+    }),
+    prisma.post.update({
       where: { id: input.postId },
       data: { commentCount: { increment: 1 } },
-    });
-
-    return createdComment;
-  });
+      select: { id: true },
+    }),
+  ]);
 
   return {
     ...comment,
@@ -392,30 +390,30 @@ export const addReply = async (input: {
   authorId: string;
   content: string;
 }) => {
-  const reply = await prisma.$transaction(async (tx) => {
-    const comment = await tx.comment.findUnique({
-      where: { id: input.commentId },
-      select: {
-        id: true,
-        post: {
-          select: {
-            id: true,
-            visibility: true,
-            authorId: true,
-          },
+  const comment = await prisma.comment.findUnique({
+    where: { id: input.commentId },
+    select: {
+      id: true,
+      post: {
+        select: {
+          id: true,
+          visibility: true,
+          authorId: true,
         },
       },
-    });
+    },
+  });
 
-    if (!comment) {
-      throw new AppError(404, "Comment not found");
-    }
+  if (!comment) {
+    throw new AppError(404, "Comment not found");
+  }
 
-    if (comment.post.visibility === PostVisibilityValues.PRIVATE && comment.post.authorId !== input.authorId) {
-      throw new AppError(403, "Forbidden");
-    }
+  if (comment.post.visibility === PostVisibilityValues.PRIVATE && comment.post.authorId !== input.authorId) {
+    throw new AppError(403, "Forbidden");
+  }
 
-    const createdReply = await tx.reply.create({
+  const [reply] = await prisma.$transaction([
+    prisma.reply.create({
       data: {
         commentId: input.commentId,
         authorId: input.authorId,
@@ -429,15 +427,13 @@ export const addReply = async (input: {
         updatedAt: true,
         author: { select: userSelect },
       },
-    });
-
-    await tx.comment.update({
+    }),
+    prisma.comment.update({
       where: { id: input.commentId },
       data: { replyCount: { increment: 1 } },
-    });
-
-    return createdReply;
-  });
+      select: { id: true },
+    }),
+  ]);
 
   return {
     ...reply,

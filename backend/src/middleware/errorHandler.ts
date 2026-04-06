@@ -28,6 +28,13 @@ export const errorHandler: ErrorRequestHandler = (error, _req, res, _next) => {
     if (error.code === "P2025") {
       return res.status(404).json({ success: false, message: "Record not found." });
     }
+
+    if (error.code === "P2028") {
+      return res.status(503).json({
+        success: false,
+        message: "Database is busy right now. Please try again in a moment.",
+      });
+    }
   }
 
   const message = error instanceof Error ? error.message : "Internal server error";

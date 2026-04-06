@@ -14,7 +14,15 @@ if (!datasourceUrl) {
 
 const adapter = new PrismaPg({ connectionString: datasourceUrl });
 
-export const prisma = globalThis.prisma ?? new PrismaClient({ adapter });
+export const prisma =
+  globalThis.prisma ??
+  new PrismaClient({
+    adapter,
+    transactionOptions: {
+      maxWait: 15_000,
+      timeout: 12_000,
+    },
+  });
 
 if (process.env.NODE_ENV !== "production") {
   globalThis.prisma = prisma;
