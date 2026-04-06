@@ -9,6 +9,80 @@ import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import MiddleColumn from "./MiddleColumn";
 
+function SkeletonBlock({ className = "" }: { className?: string }) {
+  return <div className={`feed-skeleton ${className}`.trim()} aria-hidden="true" />;
+}
+
+function FeedLoadingSkeleton() {
+  return (
+    <div className="_layout _layout_main_wrapper feed-skeleton-page" aria-busy="true" aria-live="polite">
+      <div className="container _custom_container _padd_t24">
+        <div className="feed-skeleton-card">
+          <div className="feed-skeleton-row">
+            <SkeletonBlock className="feed-skeleton-avatar" />
+            <div className="feed-skeleton-stack">
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-lg" />
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+            </div>
+          </div>
+        </div>
+
+        <div className="row feed-skeleton-columns">
+          <div className="col-xl-3 col-lg-3 col-md-12 col-sm-12">
+            <div className="feed-skeleton-card">
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-lg" />
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+            </div>
+          </div>
+
+          <div className="col-xl-6 col-lg-6 col-md-12 col-sm-12">
+            <div className="feed-skeleton-card">
+              <div className="feed-skeleton-row">
+                <SkeletonBlock className="feed-skeleton-avatar" />
+                <div className="feed-skeleton-stack">
+                  <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-lg" />
+                  <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+                </div>
+              </div>
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-rect" />
+              <div className="feed-skeleton-row">
+                <SkeletonBlock className="feed-skeleton-chip" />
+                <SkeletonBlock className="feed-skeleton-chip" />
+                <SkeletonBlock className="feed-skeleton-chip" />
+              </div>
+            </div>
+
+            <div className="feed-skeleton-card">
+              <div className="feed-skeleton-row">
+                <SkeletonBlock className="feed-skeleton-avatar" />
+                <div className="feed-skeleton-stack">
+                  <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-lg" />
+                  <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+                </div>
+              </div>
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+              <SkeletonBlock className="feed-skeleton-rect" />
+            </div>
+          </div>
+
+          <div className="col-xl-3 col-lg-3 col-md-12 col-sm-12">
+            <div className="feed-skeleton-card">
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-lg" />
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-line" />
+              <SkeletonBlock className="feed-skeleton-line feed-skeleton-line-sm" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function FeedClient() {
   const auth = useAuth();
   const router = useRouter();
@@ -24,13 +98,7 @@ export default function FeedClient() {
   }, [auth.isLoading, auth.user, router]);
 
   if (auth.isLoading) {
-    return (
-      <div className="_layout _layout_main_wrapper">
-        <div className="container _custom_container _padd_t24">
-          <p>Loading feed...</p>
-        </div>
-      </div>
-    );
+    return <FeedLoadingSkeleton />;
   }
 
   if (!auth.user) {
