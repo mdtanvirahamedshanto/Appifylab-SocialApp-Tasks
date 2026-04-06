@@ -139,6 +139,7 @@ Required backend variables:
 
 - `DATABASE_URL`
 - `FRONTEND_URL`
+- `REFRESH_COOKIE_PATH`
 - `ACCESS_TOKEN_SECRET`
 - `REFRESH_TOKEN_SECRET`
 
@@ -155,6 +156,20 @@ Create `frontend/.env.local` manually with:
 
 ```env
 NEXT_PUBLIC_API_BASE_URL=http://localhost:4000/api
+```
+
+For Vercel deployment using `vercel.json` with `routePrefix` set to `/_/backend`:
+
+- Frontend environment variable:
+	- `NEXT_PUBLIC_API_BASE_URL=/_/backend/api`
+- Backend environment variables:
+	- `FRONTEND_URL=https://<your-vercel-domain>`
+	- `REFRESH_COOKIE_PATH=/_/backend/api/auth`
+
+If you use preview deployments or multiple domains, set `FRONTEND_URL` as comma-separated origins, for example:
+
+```env
+FRONTEND_URL=https://appifylab-social-app-tasks.vercel.app,https://appifylab-social-app-tasks-git-main-username.vercel.app
 ```
 
 ## Local Development (Without Docker)

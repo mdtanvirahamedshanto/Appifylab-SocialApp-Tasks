@@ -2,7 +2,9 @@ import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { clearAccessToken, getAccessToken, setAccessToken } from "./session";
 import type { ApiComment, ApiPost, ApiReply, ApiUser, FeedResponse, LikeType, PostCommentsResponse, PostVisibility } from "./types";
 
-const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:4000/api";
+const baseURL =
+  process.env.NEXT_PUBLIC_API_BASE_URL ??
+  (process.env.NODE_ENV === "production" ? "/_/backend/api" : "http://localhost:4000/api");
 
 export const authClient = axios.create({
   baseURL,

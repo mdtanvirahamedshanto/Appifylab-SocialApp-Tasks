@@ -7,7 +7,7 @@ export const getRefreshCookieOptions = (expiresAt: Date): CookieOptions => ({
   httpOnly: true,
   secure: env.NODE_ENV === "production",
   sameSite: "lax",
-  path: "/api/auth",
+  path: env.REFRESH_COOKIE_PATH,
   expires: expiresAt,
 });
 
@@ -15,5 +15,5 @@ export const getClearRefreshCookieOptions = (): CookieOptions => ({
   httpOnly: true,
   secure: env.NODE_ENV === "production",
   sameSite: "lax",
-  path: "/api/auth",
+  path: env.REFRESH_COOKIE_PATH,
 });

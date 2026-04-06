@@ -10,13 +10,23 @@ import { assignRequestId } from "./middleware/requestId.js";
 
 export const createApp = () => {
   const app = express();
+  const allowedOrigins = env.FRONTEND_URL.split(",")
+    .map((origin) => origin.trim())
+    .filter(Boolean);
 
   app.set("trust proxy", 1);
   app.use(helmet());
   app.use(assignRequestId);
   app.use(
     cors({
-      origin: env.FRONTEND_URL,
+      origin(origin, callback) {
+        if (!origin || allowedOrigins.includes(origin)) {
+          callback(null, true);
+          return;
+        }
+
+        callback(new Error("CORS origin blocked"));
+      },
       credentials: true,
     }),
   );
