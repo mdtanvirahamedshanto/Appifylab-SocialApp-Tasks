@@ -31,6 +31,37 @@ const likedByText = (users: Array<{ firstName: string; lastName: string }>) => {
 
 const isTempEntityId = (id: string) => id.startsWith("temp-");
 
+function MiddleFeedLoadingSkeleton() {
+  return (
+    <div className="_mar_b16" aria-hidden="true">
+      <div className="feed-skeleton-card">
+        <div className="feed-skeleton-row">
+          <div className="feed-skeleton feed-skeleton-avatar" />
+          <div className="feed-skeleton-stack">
+            <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-lg" />
+            <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+          </div>
+        </div>
+        <div className="feed-skeleton feed-skeleton-line" />
+        <div className="feed-skeleton feed-skeleton-line" />
+        <div className="feed-skeleton feed-skeleton-rect" />
+      </div>
+
+      <div className="feed-skeleton-card">
+        <div className="feed-skeleton-row">
+          <div className="feed-skeleton feed-skeleton-avatar" />
+          <div className="feed-skeleton-stack">
+            <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-lg" />
+            <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+          </div>
+        </div>
+        <div className="feed-skeleton feed-skeleton-line" />
+        <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+      </div>
+    </div>
+  );
+}
+
 export default function MiddleColumn() {
   const auth = useAuth();
 
@@ -629,7 +660,7 @@ export default function MiddleColumn() {
         </div>
 
         {feedError ? <p className="_mar_b16 text-sm text-rose-500">{feedError}</p> : null}
-        {feedLoading ? <p className="_mar_b16">Loading feed...</p> : null}
+        {feedLoading ? <MiddleFeedLoadingSkeleton /> : null}
 
         {posts.map((post) => (
           <div className="_feed_inner_timeline_post_area _b_radious6 _padd_b24 _padd_t24 _mar_b16" key={post.id}>
