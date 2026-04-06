@@ -246,8 +246,12 @@ function FeedPostCard({
               return (
                 <div className="_comment_main" key={comment.id}>
                   {isTempEntityId(comment.id) ? (
-                    <div className="_mar_b8">
-                      <small className="text-xs opacity-70">Syncing comment...</small>
+                    <div className="feed-skeleton-row _mar_b12" aria-label="Loading comment">
+                      <div className="feed-skeleton feed-skeleton-avatar" />
+                      <div className="feed-skeleton-stack" style={{ maxWidth: "320px" }}>
+                        <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+                        <div className="feed-skeleton feed-skeleton-line" style={{ width: "85%", marginBottom: 0 }} />
+                      </div>
                     </div>
                   ) : null}
 
@@ -375,6 +379,15 @@ function FeedPostCard({
 
                     {comment.replies.map((reply) => (
                       <div className="_comment_main _mar_t16 _mar_l16" key={reply.id}>
+                        {isTempEntityId(reply.id) ? (
+                          <div className="feed-skeleton-row _mar_b8" aria-label="Loading reply">
+                            <div className="feed-skeleton feed-skeleton-avatar" />
+                            <div className="feed-skeleton-stack" style={{ maxWidth: "280px" }}>
+                              <div className="feed-skeleton feed-skeleton-line feed-skeleton-line-sm" />
+                              <div className="feed-skeleton feed-skeleton-line" style={{ width: "78%", marginBottom: 0 }} />
+                            </div>
+                          </div>
+                        ) : null}
                         <div className="_comment_image">
                           <a href="#0" className="_comment_image_link">
                             <img src="/buddy-script/assets/images/txt_img.png" alt="Image" className="_comment_img1" />
