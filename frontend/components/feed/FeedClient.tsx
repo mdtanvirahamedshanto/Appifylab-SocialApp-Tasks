@@ -91,6 +91,13 @@ export default function FeedClient() {
   const [showNotify, setShowNotify] = useState(false);
   const [showProfileMenu, setShowProfileMenu] = useState(false);
 
+  const handleLogout = async () => {
+    if (auth.user) {
+      await auth.logout();
+    }
+    router.replace("/login");
+  };
+
   useEffect(() => {
     if (!auth.isLoading && !auth.user) {
       router.replace("/login");
@@ -137,15 +144,10 @@ export default function FeedClient() {
           showProfileMenu={showProfileMenu}
           onToggleNotify={() => setShowNotify((prev) => !prev)}
           onToggleProfile={() => setShowProfileMenu((prev) => !prev)}
-          onLogout={async () => {
-            if (auth.user) {
-              await auth.logout();
-            }
-            router.replace("/login");
-          }}
+          onLogout={handleLogout}
         />
 
-        <MobileNav />
+        <MobileNav onLogout={handleLogout} />
 
         <div className="container _custom_container">
           <div className="_layout_inner_wrap">

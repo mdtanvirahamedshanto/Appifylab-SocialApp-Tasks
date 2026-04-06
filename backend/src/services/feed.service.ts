@@ -574,7 +574,10 @@ const getTargetSelect = (target: LikeTarget) => {
   } as const;
 };
 
-const findTargetOrThrow = async (tx: Prisma.TransactionClient, target: LikeTarget) => {
+const findTargetOrThrow = async (
+  tx: Pick<Prisma.TransactionClient, "post" | "comment" | "reply">,
+  target: LikeTarget,
+) => {
   if (target.type === LikeTypeValues.POST) {
     const post = await tx.post.findUnique({ where: { id: target.targetId }, select: getTargetSelect(target) });
     if (!post) throw new AppError(404, "Post not found");
@@ -593,30 +596,57 @@ const findTargetOrThrow = async (tx: Prisma.TransactionClient, target: LikeTarge
 };
 
 export const toggleLike = async (input: { userId: string } & LikeTarget) => {
-  return prisma.$transaction(async (tx) => {
-    await ensureLikeTargetAccessible(tx, input);
+  await ensureLikeTargetAccessible(prisma, input);
 
-    const likeWhere = getLikeWhere(input.userId, input);
-    const existing = await tx.like.findUnique({ where: likeWhere, select: { id: true } });
+  const maxAttempts = 3;
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
+    try {
+      return await prisma.$transaction(async (tx) => {
+        const likeWhere = getLikeWhere(input.userId, input);
+        const existing = await tx.like.findUnique({ where: likeWhere, select: { id: true } });
 
-    let liked = false;
-    if (existing) {
-      await tx.like.delete({ where: likeWhere });
-      await updateLikeCounter(tx, input, "decrement");
-      liked = false;
-    } else {
-      await tx.like.create({ data: createLikeData(input) });
-      await updateLikeCounter(tx, input, "increment");
-      liked = true;
+        let liked = false;
+        if (existing) {
+          await tx.like.delete({ where: likeWhere });
+          await updateLikeCounter(tx, input, "decrement");
+          liked = false;
+        } else {
+          await tx.like.create({ data: createLikeData(input) });
+          await updateLikeCounter(tx, input, "increment");
+          liked = true;
+        }
+
+        const target = await findTargetOrThrow(tx, { type: input.type, targetId: input.targetId });
+
+        return {
+          liked,
+          likeCount: target.likeCount,
+          likedBy: target.likes.map((like: { user: { id: string; firstName: string; lastName: string; email: string } }) => like.user),
+          viewerLiked: target.likes.some((like: { userId: string }) => like.userId === input.userId),
+        };
+      });
+    } catch (error) {
+      if (
+        error instanceof Prisma.PrismaClientKnownRequestError &&
+        (error.code === "P2002" || error.code === "P2025") &&
+        attempt < maxAttempts - 1
+      ) {
+        continue;
+      }
+
+      throw error;
     }
+  }
 
-    const target = await findTargetOrThrow(tx, { type: input.type, targetId: input.targetId });
-
-    return {
-      liked,
-      likeCount: target.likeCount,
-      likedBy: target.likes.map((like: { user: { id: string; firstName: string; lastName: string; email: string } }) => like.user),
-      viewerLiked: target.likes.some((like: { userId: string }) => like.userId === input.userId),
-    };
+  const target = await findTargetOrThrow(prisma, {
+    type: input.type,
+    targetId: input.targetId,
   });
+
+  return {
+    liked: target.likes.some((like: { userId: string }) => like.userId === input.userId),
+    likeCount: target.likeCount,
+    likedBy: target.likes.map((like: { user: { id: string; firstName: string; lastName: string; email: string } }) => like.user),
+    viewerLiked: target.likes.some((like: { userId: string }) => like.userId === input.userId),
+  };
 };

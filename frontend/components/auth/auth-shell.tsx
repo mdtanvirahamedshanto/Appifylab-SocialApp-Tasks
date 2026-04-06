@@ -19,8 +19,8 @@ const registerSchema = z
     firstName: z.string().trim().min(1, "First name is required"),
     lastName: z.string().trim().min(1, "Last name is required"),
     email: z.string().trim().email(),
-    password: z.string().min(1, "Password is required"),
-    repeatPassword: z.string().min(1, "Repeat password is required"),
+    password: z.string().min(8, "Password must be at least 8 characters"),
+    repeatPassword: z.string().min(8, "Repeat password must be at least 8 characters"),
   })
   .refine((value) => value.password === value.repeatPassword, {
     message: "Passwords do not match",

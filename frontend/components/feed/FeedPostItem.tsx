@@ -329,6 +329,9 @@ function FeedPostCard({
                         </div>
                       </div>
                     </div>
+                    <div className="_mar_t8">
+                      <small>Liked by: {likedByText(comment.likedBy)}</small>
+                    </div>
 
                     {comment.replies.map((reply) => {
                       if (isTempEntityId(reply.id)) {
@@ -420,6 +423,9 @@ function FeedPostCard({
                                   </ul>
                                 </div>
                               </div>
+                            </div>
+                            <div className="_mar_t8">
+                              <small>Liked by: {likedByText(reply.likedBy)}</small>
                             </div>
                           </div>
                         </div>

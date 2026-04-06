@@ -191,6 +191,11 @@ export default function HeaderNav({
                   <path fill="#112032" d="M5 5l.354.354L5 5.707l-.354-.353L5 5zm4.354-3.646l-4 4-.708-.708 4-4 .708.708zm-4.708 4l-4-4 .708-.708 4 4-.708.708z" />
                 </svg>
               </button>
+              <button type="button" className="_header_nav_dropdown_btn _mar_l8" aria-label="Logout" title="Logout" onClick={() => void onLogout()}>
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="none" viewBox="0 0 19 19">
+                  <path stroke="#112032" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6.667 18H2.889A1.889 1.889 0 011 16.111V2.89A1.889 1.889 0 012.889 1h3.778M13.277 14.222L18 9.5l-4.723-4.722M18 9.5H6.667" />
+                </svg>
+              </button>
             </div>
             <div id="_prfoile_drop" className={`_nav_profile_dropdown _profile_dropdown ${showProfileMenu ? "show" : ""}`}>
               <div className="_nav_profile_dropdown_info">

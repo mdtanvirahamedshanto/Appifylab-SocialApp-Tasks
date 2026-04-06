@@ -1,4 +1,8 @@
-export default function MobileNav() {
+interface MobileNavProps {
+  onLogout: () => Promise<void>;
+}
+
+export default function MobileNav({ onLogout }: MobileNavProps) {
   return (
     <>
       <div className="_header_mobile_menu">
@@ -67,6 +71,13 @@ export default function MobileNav() {
                       </svg>
                       <span className="_counting">2</span>
                     </a>
+                  </li>
+                  <li className="_mobile_navigation_bottom_item">
+                    <button type="button" className="_mobile_navigation_bottom_link" aria-label="Logout" title="Logout" onClick={() => void onLogout()}>
+                      <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 19 19">
+                        <path stroke="#666" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M6.667 18H2.889A1.889 1.889 0 011 16.111V2.89A1.889 1.889 0 012.889 1h3.778M13.277 14.222L18 9.5l-4.723-4.722M18 9.5H6.667" />
+                      </svg>
+                    </button>
                   </li>
                   <div className="_header_mobile_toggle">
                     <button type="button" className="_header_mobile_btn_link">
