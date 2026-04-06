@@ -96,16 +96,19 @@ async function main() {
     data: { likeCount: 1 },
   });
 
-  console.log("Seed complete", {
-    users: [alice.email, ben.email, cara.email],
-    publicPost: publicPost.id,
-    privatePost: privatePost.id,
-  });
+  process.stdout.write(
+    `${JSON.stringify({
+      message: "Seed complete",
+      users: [alice.email, ben.email, cara.email],
+      publicPost: publicPost.id,
+      privatePost: privatePost.id,
+    })}\n`,
+  );
 }
 
 main()
   .catch((error) => {
-    console.error(error);
+    process.stderr.write(`${error instanceof Error ? error.stack ?? error.message : String(error)}\n`);
     process.exitCode = 1;
   })
   .finally(async () => {

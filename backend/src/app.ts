@@ -6,12 +6,14 @@ import { env } from "./config/env.js";
 import apiRoutes from "./routes/index.js";
 import { errorHandler } from "./middleware/errorHandler.js";
 import { notFound } from "./middleware/notFound.js";
+import { assignRequestId } from "./middleware/requestId.js";
 
 export const createApp = () => {
   const app = express();
 
   app.set("trust proxy", 1);
   app.use(helmet());
+  app.use(assignRequestId);
   app.use(
     cors({
       origin: env.FRONTEND_URL,
