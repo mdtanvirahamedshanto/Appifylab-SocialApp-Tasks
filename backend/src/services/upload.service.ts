@@ -1,5 +1,6 @@
 import { AppError } from "../utils/AppError.js";
 import { cloudinary, isCloudinaryConfigured } from "../config/cloudinary.js";
+import { env } from "../config/env.js";
 
 export const uploadImageBuffer = async (file: Express.Multer.File) => {
   if (!isCloudinaryConfigured()) {
@@ -9,7 +10,7 @@ export const uploadImageBuffer = async (file: Express.Multer.File) => {
   return new Promise<{ secureUrl: string; publicId: string }>((resolve, reject) => {
     const uploadStream = cloudinary.uploader.upload_stream(
       {
-        folder: "appifylab",
+        folder: env.CLOUDINARY_FOLDER,
         resource_type: "image",
       },
       (error, result) => {
