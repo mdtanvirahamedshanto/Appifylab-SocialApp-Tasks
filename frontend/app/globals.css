@@ -145,6 +145,37 @@ select {
   white-space: nowrap;
 }
 
+.composer-visibility-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.composer-visibility-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #5c6883;
+  margin: 0;
+}
+
+.composer-visibility-select {
+  min-width: 108px;
+  height: 34px;
+  border: 1px solid #cfdae9;
+  border-radius: 8px;
+  background: #fff;
+  color: #1f2e45;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 0 28px 0 10px;
+}
+
+.composer-visibility-select:focus-visible {
+  outline: 2px solid #2a7de1;
+  outline-offset: 1px;
+}
+
 @media (min-width: 992px) {
   ._header_nav .collapse.navbar-collapse {
     display: flex !important;

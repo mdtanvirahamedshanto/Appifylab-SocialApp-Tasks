@@ -42,23 +42,20 @@ function PostComposer({
             Write something ...
           </label>
         </div>
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            className={`_feed_inner_text_area_btn_link ${composerVisibility === "PUBLIC" ? "" : "opacity-60"}`}
-            onClick={() => onVisibilityChange("PUBLIC")}
-            aria-pressed={composerVisibility === "PUBLIC"}
+        <div className="composer-visibility-compact">
+          <label htmlFor="composerVisibility" className="composer-visibility-label">
+            Visibility
+          </label>
+          <select
+            id="composerVisibility"
+            className="composer-visibility-select"
+            value={composerVisibility}
+            onChange={(event) => onVisibilityChange(event.target.value as PostVisibility)}
+            aria-label="Post visibility"
           >
-            Public
-          </button>
-          <button
-            type="button"
-            className={`_feed_inner_text_area_btn_link ${composerVisibility === "PRIVATE" ? "" : "opacity-60"}`}
-            onClick={() => onVisibilityChange("PRIVATE")}
-            aria-pressed={composerVisibility === "PRIVATE"}
-          >
-            Private
-          </button>
+            <option value="PUBLIC">Public</option>
+            <option value="PRIVATE">Private</option>
+          </select>
         </div>
       </div>
 
